@@ -1,4 +1,4 @@
-/* FTracker v1.8.18 — single application runtime.
+/* FTracker v1.8.20 — single application runtime.
    Consolidated from the audited inline runtimes without changing their order. */
 
 /* ===== CONSOLIDATED RUNTIME BLOCK 1 ===== */
@@ -4250,7 +4250,7 @@ function exitWorkoutWithoutSaving() { closeConfirmExit(); stopRestTimer(); stopT
 
 function isWorkoutSetFilledForResult(set,type='strength'){
     if(!set || typeof set!=='object') return false;
-    if(type==='cardio') return Number(set.time)>0 || Number(set.durationSeconds)>0;
+    if(type==='cardio') return (Number(set.time)>0 || Number(set.durationSeconds)>0) && Number(set.intensity)>0;
     if(type==='bodyweight') return Number(set.reps)>0;
     // Силовой подход считается результатом только при заполнении ОБОИХ полей.
     return Number(set.weight)>0 && Number(set.reps)>0;
@@ -6231,7 +6231,7 @@ function showToast(msg) {
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1.7.97', {updateViaCache:'none'})
+        navigator.serviceWorker.register('./sw.js?v=1.8.20', {updateViaCache:'none'})
             .then(reg => console.log('SW registered', reg.scope))
             .catch(err => console.log('SW failed', err));
     });
@@ -11116,7 +11116,7 @@ async function clearTemporaryFiles(){
     if(typeof showToast==='function') showToast('Все данные приложения очищены. Перезапуск…');
     setTimeout(()=>{
       // Force the current clean app shell to initialise data from defaults.
-      location.replace(location.pathname+'?v=1.7.97&reset='+Date.now());
+      location.replace(location.pathname+'?v=1.8.20&reset='+Date.now());
     },250);
   }catch(err){
     console.error('Full application reset failed',err);
