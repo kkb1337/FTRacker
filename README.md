@@ -1,4 +1,20 @@
-# FTracker v1.8.20 — Total audit fixes
+# FTracker v1.8.22 — Workout & Dynamic Index logic audit fixes
+
+## Logic fixes
+- Cardio completion now uses one validation rule everywhere: time + intensity.
+- Dynamic Index working-weight factor (25%) is now actually included in the training score.
+- Working-weight trend uses the canonical working-result rule (same weight, at least 3 sets, at least 6 reps), not the maximum single set.
+- Historical exercise type is respected when reading strength history, preventing cardio/bodyweight records from being reinterpreted after catalog changes.
+- Workout result validation is shared between checkbox completion and history saving.
+- Training factor labels/methodology now match the implemented working-weight calculation.
+
+## Intentionally unchanged
+- CSS and existing runtime architecture are untouched.
+- Overall 40/30/30 block weighting, Systemity 50%, EMA, custom goals and separate Confidence model are unchanged.
+
+---
+
+# FTracker v1.8.17 — Dynamic Index refinement + UI consistency
 
 This release keeps the stable window/screen architecture. Workout behavior is preserved, with only targeted rendering/performance reductions in the set-entry path.
 
@@ -11,7 +27,7 @@ This release keeps the stable window/screen architecture. Workout behavior is pr
 - Goal instructions now clearly distinguish fixed targets from stability corridors.
 - Dynamic Index now presents confidence as a confidence indicator rather than implying false precision.
 - Progress summary is clearer about the selected period and trend metrics.
-- Application, manifest and service-worker versions synchronized to 1.8.20.
+- Application, manifest and service-worker versions synchronized to 1.8.09.
 
 ## Intentionally unchanged
 - Stable workout rendering/performance path is intentionally left untouched in this release.

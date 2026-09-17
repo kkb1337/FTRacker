@@ -1,4 +1,4 @@
-/* FTracker v1.8.20 — single application runtime.
+/* FTracker v1.8.21 — single application runtime.
    Consolidated from the audited inline runtimes without changing their order. */
 
 /* ===== CONSOLIDATED RUNTIME BLOCK 1 ===== */
@@ -1510,13 +1510,41 @@ function fScoreBody(goal,periodDays=90){
     if(goal==='maintain' && weight && Math.abs(weight.speed)>.3)score-=Math.min(35,(Math.abs(weight.speed)-.3)*55);
     return {score:fScoreClamp(score),available:true,weight,waist,other,otherData};
 }
-function fScoreWorkingWeightTrend(history,periodDays=90){
+function fScoreWorkingWeightTrend(history,periodDays=90,goal='maintain'){
     const now=Date.now(),days=Math.max(7,Number(periodDays)||90),start=now-days*86400000,mid=now-Math.ceil(days/2)*86400000,by={};
-    (history||[]).forEach(e=>{const date=new Date(e.date).getTime();if(!Number.isFinite(date)||date<start||date>now)return;(e.exercises||[]).forEach(ex=>{const name=String(ex.name||'').trim(),sets=ex.sets||[];if(!name)return;const values=sets.map(x=>Number(x.weight)).filter(v=>Number.isFinite(v)&&v>0);if(!values.length)return;(by[name]||(by[name]=[])).push({date,weight:Math.max(...values)});});});
-    const trends=[];Object.values(by).forEach(a=>{const prev=a.filter(x=>x.date<mid),cur=a.filter(x=>x.date>=mid);if(!prev.length||!cur.length)return;const pa=fScoreMedian(prev.map(x=>x.weight)),ca=fScoreMedian(cur.map(x=>x.weight));if(pa>0&&Number.isFinite(ca))trends.push((ca-pa)/pa*100);});
-    if(!trends.length)return {score:null,available:false,count:0,trend:'Недостаточно данных в обеих половинах периода',periodDays:days};
+    // Working weight is deliberately NOT the heaviest set of a workout.
+    // Use the canonical working-result rule: same weight, at least 3 sets,
+    // and at least 6 reps per set. This keeps the signal about regular work
+    // rather than one-off PR attempts and avoids duplicating the e1RM signal.
+    (history||[]).forEach(e=>{
+        const date=new Date(e.date).getTime();
+        if(!Number.isFinite(date)||date<start||date>now)return;
+        (e.exercises||[]).forEach(ex=>{
+            const name=String(ex?.name||'').trim();
+            if(!name || (ex.type && ex.type!=='strength')) return;
+            const result=getWorkingResultFromEntry(e,name);
+            if(!result || !(Number(result.weight)>0)) return;
+            (by[name]||(by[name]=[])).push({date,weight:Number(result.weight)});
+        });
+    });
+    const trends=[];
+    Object.values(by).forEach(a=>{
+        const prev=a.filter(x=>x.date<mid),cur=a.filter(x=>x.date>=mid);
+        if(!prev.length||!cur.length)return;
+        const pa=fScoreMedian(prev.map(x=>x.weight)),ca=fScoreMedian(cur.map(x=>x.weight));
+        if(pa>0&&Number.isFinite(ca))trends.push((ca-pa)/pa*100);
+    });
+    if(!trends.length)return {score:null,available:false,count:0,avgChange:null,trend:'Недостаточно данных в обеих половинах периода',periodDays:days,aggregation:'median-working-result'};
     const median=fScoreMedian(trends);
-    return {score:null,available:true,count:trends.length,avgChange:median,trend:median>3?'Рост рабочих весов':median<-3?'Снижение рабочих весов':'Рабочие веса стабильны',periodDays:days,aggregation:'median'};
+    return {
+        score:fScoreWorkingGoalScore(goal,median),
+        available:true,
+        count:trends.length,
+        avgChange:median,
+        trend:median>3?'Рост рабочих весов':median<-3?'Снижение рабочих весов':'Рабочие веса стабильны',
+        periodDays:days,
+        aggregation:'median-working-result'
+    };
 }
 function fScoreWorkingGoalScore(goal,avg){
     if(!Number.isFinite(avg))return null;
@@ -1644,8 +1672,8 @@ function renderFScoreCustomEditorMarkup(){
 function fScoreTraining(recent,prev,history,goal,customCfg=null){
     const consistency=customCfg?.training?.target?fScoreTrainingConsistencyCustom(recent,prev,Number(customCfg.training.target)||15):fScoreTrainingConsistency(recent,prev);
     const periodDays=customCfg?Math.max(7,Number(customCfg.evaluationDays)||90):90;
-    const working=fScoreWorkingWeightTrend(history,periodDays),repChange=fScoreRepTrend(history,periodDays);
-    const workingScore=working.available?fScoreWorkingGoalScore(goal,working.avgChange):null;
+    const working=fScoreWorkingWeightTrend(history,periodDays,goal),repChange=fScoreRepTrend(history,periodDays);
+    const workingScore=working.available?working.score:null;
     const reps=fScoreRepGoalScore(goal,repChange);
     const performance=fScorePerformanceSignals(history,periodDays);
     const e1rmScore=performance.available?fScorePerformanceGoalScore(goal,performance.e1rm):null;
@@ -1656,7 +1684,7 @@ function fScoreTraining(recent,prev,history,goal,customCfg=null){
     const trainingWeights=customCfg?.training?.weights||{systemity:50,working:25,e1rm:10,volume:15};
     const parts=[
         {score:consistency.score,weight:Number(trainingWeights.systemity)||0,name:'Системность'},
-        {score:workingScore,weight:Number(trainingWeights.working)||0,name:'Нагрузка'},
+        {score:workingScore,weight:Number(trainingWeights.working)||0,name:'Рабочие веса'},
         {score:e1rmScore,weight:Number(trainingWeights.e1rm)||0,name:'Сила (Расчётный 1ПМ)'},
         {score:volumeScore,weight:Number(trainingWeights.volume)||0,name:'Объём'}
     ].filter(p=>Number.isFinite(p.score)&&p.weight>0);
@@ -2019,7 +2047,7 @@ function renderFScoreAnalytics(){
     </div></details>
     <details class="fscore-method-sub" open><summary>Тренировки</summary><div class="fscore-method-section">
       <div class="fscore-method-item"><b>Системность — 50%</b><span>60% — попадание в целевую частоту, 40% — равномерность. Максимальный перерыв: ≤5 дн. = 100; ≤7 = 96; ≤10 = 88; ≤14 = 76; ≤21 = 58; ≤30 = 40; &gt;30 = 20. Текущий период: 80% + предыдущий 20%.</span></div>
-      <div class="fscore-method-item"><b>Рабочие веса — 25%</b><span>Максимальный вес каждого силового упражнения в тренировке. Сравнивается медиана первой и второй половины периода.</span></div>
+      <div class="fscore-method-item"><b>Рабочие веса — 25%</b><span>Рабочий результат силового упражнения: один вес, минимум 3 подхода и не менее 6 повторений в каждом. Сравнивается медиана первой и второй половины периода.</span></div>
       <div class="fscore-method-item"><b>Расчётный 1ПМ — 10%</b><span>Для 2–12 повторений: <code>1ПМ = вес × (1 + повторения / 30)</code>; при 1 повторении используется фактический вес. Сравниваются средние значения первой и второй половины.</span></div>
       <div class="fscore-method-item"><b>Объём — 15%</b><span><code>Объём = Σ(вес × повторения)</code>. Сравнивается средний объём первой и второй половины.</span></div>
       <div class="fscore-method-note">Повторения отдельно не взвешиваются: они уже входят в 1ПМ и объём. Недоступный показатель исключается, остальные веса пересчитываются.</div>
@@ -2313,7 +2341,7 @@ function getExerciseRecordData(name){
             ['Лучший вес',`${formatNum(bestWeight)} кг × ${formatNum(bestWeightReps)}`],
             ['Расчётный 1ПМ',bestE1rm?`${formatNum(bestE1rm)} кг`:'—'],
             ['Лучшие повторы',`${formatNum(bestRepsWeight)} кг × ${formatNum(bestReps)}`],
-            ['Рабочий вес',work?`${formatNum(work.weight)} кг × ${formatNum(work.reps)} × ${work.sets}`:'—'],
+            ['Лучший рабочий результат',work?`${formatNum(work.weight)} кг × ${formatNum(work.reps)} × ${work.sets}`:'—'],
             ['Тренировок',String(entries.filter(e=>getStrengthSetsForExerciseInEntry(e,name).length).length)]
         ]};
     }
@@ -3658,6 +3686,11 @@ function formatPreviousSetResult(set, exerciseName){
 
 function getStrengthSetsForExerciseInEntry(entry, exerciseName){
     const ex=(entry?.exercises||[]).find(x=>x && normalizeExerciseKey(x.name)===normalizeExerciseKey(exerciseName));
+    // Historical type wins over the current catalog type. This prevents an
+    // old cardio/bodyweight result from being reinterpreted as strength after
+    // the exercise was changed in the catalog. Legacy entries without a type
+    // retain the existing name-based fallback.
+    if(ex?.type && ex.type!=='strength') return [];
     return (ex?.sets||[]).filter(s=>Number(s.weight)>0 && Number(s.reps)>0);
 }
 function getWorkingResultFromEntry(entry, exerciseName){
@@ -4075,10 +4108,7 @@ function markSetDone(exIdx, setIdx) {
     } else {
         const meta = getWorkoutExercise(exIdx);
         const type = meta?.type || 'strength';
-        const positive = v => Number.isFinite(Number(v)) && Number(v) > 0;
-        const complete = type==='strength' ? (positive(set.weight) && positive(set.reps))
-          : type==='cardio' ? (positive(set.time) && positive(set.intensity))
-          : positive(set.reps);
+        const complete = isWorkoutSetFilledForResult(set,type);
         if (!complete) {
             showToast(type==='strength' ? 'Заполните вес и повторения перед отметкой подхода' : type==='cardio' ? 'Заполните время и интенсивность перед отметкой подхода' : 'Заполните повторения перед отметкой подхода');
             return;
@@ -4250,10 +4280,11 @@ function exitWorkoutWithoutSaving() { closeConfirmExit(); stopRestTimer(); stopT
 
 function isWorkoutSetFilledForResult(set,type='strength'){
     if(!set || typeof set!=='object') return false;
-    if(type==='cardio') return (Number(set.time)>0 || Number(set.durationSeconds)>0) && Number(set.intensity)>0;
-    if(type==='bodyweight') return Number(set.reps)>0;
+    const positive=v=>Number.isFinite(Number(v)) && Number(v)>0;
+    if(type==='cardio') return positive(set.time) && positive(set.intensity);
+    if(type==='bodyweight') return positive(set.reps);
     // Силовой подход считается результатом только при заполнении ОБОИХ полей.
-    return Number(set.weight)>0 && Number(set.reps)>0;
+    return positive(set.weight) && positive(set.reps);
 }
 
 function finishWorkout() {
@@ -6231,7 +6262,7 @@ function showToast(msg) {
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1.8.20', {updateViaCache:'none'})
+        navigator.serviceWorker.register('./sw.js?v=1.8.21', {updateViaCache:'none'})
             .then(reg => console.log('SW registered', reg.scope))
             .catch(err => console.log('SW failed', err));
     });
@@ -11116,7 +11147,7 @@ async function clearTemporaryFiles(){
     if(typeof showToast==='function') showToast('Все данные приложения очищены. Перезапуск…');
     setTimeout(()=>{
       // Force the current clean app shell to initialise data from defaults.
-      location.replace(location.pathname+'?v=1.8.20&reset='+Date.now());
+      location.replace(location.pathname+'?v=1.8.21&reset='+Date.now());
     },250);
   }catch(err){
     console.error('Full application reset failed',err);
