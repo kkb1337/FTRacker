@@ -13809,3 +13809,36 @@ html,body{
   -webkit-overflow-scrolling:touch!important;
   overscroll-behavior:contain!important;
 }
+
+/* v1.8.23 — Dynamic Index / workout-result consistency */
+.fscore-confidence-card{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto auto!important;
+  align-items:center!important;
+  gap:9px!important;
+  margin:8px 0 12px!important;
+  padding:11px 14px!important;
+  border:1px solid rgba(255,255,255,.09)!important;
+  border-radius:16px!important;
+  background:rgba(255,255,255,.028)!important;
+}
+.fscore-confidence-card>div{min-width:0!important;display:flex!important;flex-direction:column!important;gap:2px!important}
+.fscore-confidence-card b{font-size:13px!important}
+.fscore-confidence-card small{font-size:10px!important;color:var(--subtext)!important}
+.fscore-confidence-card strong{font-size:20px!important;line-height:1!important}
+.fscore-confidence-card>span{font-size:10px!important;font-weight:800!important;color:var(--subtext)!important;white-space:nowrap!important}
+.fscore-block.is-empty .fscore-block-weight{opacity:.62!important}
+.workout-extra-set-label{
+  margin:10px 0 6px!important;
+  padding:7px 10px!important;
+  border-top:1px solid rgba(255,255,255,.08)!important;
+  color:var(--subtext)!important;
+  font-size:11px!important;
+  font-weight:800!important;
+  letter-spacing:.03em!important;
+  text-align:left!important;
+}
+@media(max-width:420px){
+  .fscore-confidence-card{grid-template-columns:minmax(0,1fr) auto!important}
+  .fscore-confidence-card>span{grid-column:1/-1!important;margin-top:-2px!important}
+}

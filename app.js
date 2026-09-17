@@ -1442,11 +1442,15 @@ function fScoreMeasurementTrend(key,periodDays=90){
     const ema=fScoreEMA(raw,period);
     const last=ema[ema.length-1], base=ema[0];
     const days=Math.max(1,(last.date-base.date)/86400000);
-    const change=fScorePct(base.ema,last.ema); if(change==null)return null;
-    const speed=change/(days/7);
+    const rawChange=fScorePct(base.ema,last.ema); if(rawChange==null)return null;
     const dead=key==='weight'?1.0:key==='waist'?1.0:1.5;
-    const meaningful=Math.abs(change)>dead;
-    return {change:meaningful?change:0,rawChange:change,speed,days,count:raw.length,meaningful};
+    const meaningful=Math.abs(rawChange)>dead;
+    // The dead-zone is a scoring rule, not just a display hint: once a
+    // change is classified as insignificant, it must not re-enter through
+    // speed and affect the body score.
+    const change=meaningful?rawChange:0;
+    const speed=change/(days/7);
+    return {change,rawChange,speed,days,count:raw.length,meaningful};
 }
 function fScoreRateScore(goal,speed){
     const a=Math.abs(speed);
@@ -1505,9 +1509,9 @@ function fScoreBody(goal,periodDays=90){
     }
     if(!parts.length)return {score:null,available:false,weight,waist,other,otherData};
     const total=parts.reduce((a,p)=>a+p.weight,0);
-    let score=parts.reduce((a,p)=>a+p.score*p.weight,0)/total;
-    if(goal==='cut' && otherData?.losses>=2){const severity=Math.min(35,otherData.losses*8);score-=severity;}
-    if(goal==='maintain' && weight && Math.abs(weight.speed)>.3)score-=Math.min(35,(Math.abs(weight.speed)-.3)*55);
+    // Each body signal is scored once through its configured component weight.
+    // Do not apply a second penalty for the same measurement direction here.
+    const score=parts.reduce((a,p)=>a+p.score*p.weight,0)/total;
     return {score:fScoreClamp(score),available:true,weight,waist,other,otherData};
 }
 function fScoreWorkingWeightTrend(history,periodDays=90,goal='maintain'){
@@ -1986,7 +1990,7 @@ function renderFScoreAnalytics(){
             <div class="fscore-block-name">${name}</div>
             <div class="fscore-block-score">${score}<small>/100</small></div>
             <div class="fscore-block-meta">${escapeHtml(blockMeta[key])}</div>
-            <div class="fscore-block-weight">${weight}% веса</div>
+            <div class="fscore-block-weight">${weight}% · ${available?'участвует':'исключён'}</div>
         </article>`;
     };
 
@@ -2019,8 +2023,13 @@ function renderFScoreAnalytics(){
 
       <section class="fscore-panel fscore-score-panel ${x.statusLevel}">
         <div class="fscore-score-top"><div><span>ТЕКУЩИЙ ИНДЕКС</span><strong>${scoreText}<small>/100</small></strong></div><em>${x.phase==='calibration'?'Сбор данных':x.status}</em></div>
-        <div class="fscore-score-meta"><span>🎯 ${escapeHtml(goalName)}</span><span>Доверие ${x.confidence}% · ${x.confidenceLabel}</span><span>${x.evaluationDays} дн.</span></div>
+        <div class="fscore-score-meta"><span>🎯 ${escapeHtml(goalName)}</span><span>${x.evaluationDays} дн.</span></div>
         <div class="fscore-score-bar"><i style="width:${x.availableCount?x.score:0}%"></i></div>
+      </section>
+
+      <section class="fscore-confidence-card" aria-label="Доверие к данным">
+        <div><b>Доверие к данным</b><small>Не входит в Индекс</small></div>
+        <strong>${x.confidence}%</strong><span>${x.confidenceLabel}</span>
       </section>
 
       <section class="fscore-panel fscore-composition-panel">
@@ -2040,9 +2049,9 @@ function renderFScoreAnalytics(){
   <div class="fscore-method-body">
     <div class="fscore-method-intro"><b>Суть:</b> доступные показатели переводятся в баллы <b>0–100</b>, затем формируются блоки <b>Тело / Тренировки / Питание</b>. Недостающие данные не дают ноль — показатель исключается из расчёта.</div>
     <details class="fscore-method-sub" open><summary>Тело</summary><div class="fscore-method-section">
-      <div class="fscore-method-item"><b>Вес</b><span>Очистка аномальных скачков + EMA 7. <code>Δ% = (последнее − первое) / |первое| × 100</code>; скорость = Δ% / (дни / 7). Зона ±1% считается незначимой.</span></div>
+      <div class="fscore-method-item"><b>Вес</b><span>Очистка аномальных скачков + EMA 7. <code>Δ% = (последнее − первое) / |первое| × 100</code>; скорость = Δ% / (дни / 7). Зона ±1% считается незначимой и не влияет на скорость/балл.</span></div>
       <div class="fscore-method-item"><b>Талия</b><span>EMA 14. Сушка — снижение лучше, но слишком быстрое снижение постепенно снижает балл; набор — контролируемый рост; поддержание — стабильность.</span></div>
-      <div class="fscore-method-item"><b>Остальные замеры</b><span>Параметры оцениваются отдельно, затем усредняются. При 1–2 параметрах их эффективный вес ограничивается.</span></div>
+      <div class="fscore-method-item"><b>Остальные замеры</b><span>Параметры оцениваются отдельно, затем усредняются. При 1–2 доступных параметрах эффективный вес этого блока ограничивается: 1 параметр → до 15%, 2 → до 25%, 3+ → полный заданный вес; остаток перераспределяется между доступными параметрами.</span></div>
       <div class="fscore-method-formula"><b>Веса: вес · талия · остальные</b><div><span>Набор</span><strong>30% · 10% · 60%</strong></div><div><span>Сушка</span><strong>25% · 35% · 40%</strong></div><div><span>Поддержание</span><strong>35% · 25% · 40%</strong></div></div>
     </div></details>
     <details class="fscore-method-sub" open><summary>Тренировки</summary><div class="fscore-method-section">
@@ -2064,8 +2073,8 @@ function renderFScoreAnalytics(){
       <div class="fscore-method-note"><b>Индекс = Σ(балл блока × вес) / Σ доступных весов.</b> Недостающие данные не считаются провалом.</div>
     </div></details>
     <details class="fscore-method-sub"><summary>Своя цель</summary><div class="fscore-method-section">
-      <div class="fscore-method-item"><b>Рост / снижение</b><span>Фиксированная цель. До достижения оценивается движение к ней; после — буфер max(допуск, 0,5% цели).</span></div>
-      <div class="fscore-method-item"><b>Стабильно</b><span>Центр + допустимый коридор: 70% положение относительно цели + 30% стабильность.</span></div>
+      <div class="fscore-method-item"><b>Рост / снижение</b><span>Фиксированная цель. До достижения оценивается движение к ней; после — буфер max(допуск, 0,5% цели). При превышении буфера оценка плавно снижается и ограничена диапазоном 55–100.</span></div>
+      <div class="fscore-method-item"><b>Стабильно</b><span>70% — положение относительно цели + 30% — стабильность. Если сравнения двух половин нет, стабильность временно оценивается как 80.</span></div>
       <div class="fscore-method-item"><b>Период</b><span>7–365 дней. Период системности тренировок задаётся отдельно.</span></div>
     </div></details>
     <details class="fscore-method-sub"><summary>Достоверность</summary><div class="fscore-method-section">
@@ -2956,7 +2965,8 @@ function switchExerciseModalTab(tab){
         document.getElementById('tabHistory').innerHTML=html;
     }else if(tab==='records'){
         const record=getExerciseRecordData(name);
-        document.getElementById('tabRecords').innerHTML=`<div class="records-hero"><div class="records-hero-kicker">ЛУЧШИЕ РЕЗУЛЬТАТЫ</div><div class="records-grid">${record.metrics.slice(0,3).map((m,i)=>`<div class="record-modern ${i===2?'record-work':''}"><div class="record-modern-icon">${i===0?'🏆':i===1?'🔁':'💪'}</div><div class="record-modern-label">${escapeHtml(m[0])}</div><div class="record-modern-value">${escapeHtml(m[1])}</div></div>`).join('')}</div><div class="record-modern-foot">Тренировок: <b>${escapeHtml(record.metrics[3]?.[1]||'—')}</b></div></div>`;
+        const workoutCountMetric=record.metrics.find(m=>m?.[0]==='Тренировок');
+        document.getElementById('tabRecords').innerHTML=`<div class="records-hero"><div class="records-hero-kicker">ЛУЧШИЕ РЕЗУЛЬТАТЫ</div><div class="records-grid">${record.metrics.slice(0,3).map((m,i)=>`<div class="record-modern ${i===2?'record-work':''}"><div class="record-modern-icon">${i===0?'🏆':i===1?'🔁':'💪'}</div><div class="record-modern-label">${escapeHtml(m[0])}</div><div class="record-modern-value">${escapeHtml(m[1])}</div></div>`).join('')}</div><div class="record-modern-foot">Тренировок: <b>${escapeHtml(workoutCountMetric?.[1]||'—')}</b></div></div>`;
     }else renderExerciseGraph();
 }
 
@@ -3603,7 +3613,7 @@ function renderExerciseStrip() {
         const realIdx=getActiveExerciseIndices()[idx];
         const exerciseMeta=getWorkoutExercise(realIdx);
         const sets=workoutSets[realIdx]||[];
-        const hasDone=sets.some(s=>s.done);
+        const hasDone=sets.some(s=>hasWorkoutSetResult(realIdx,s));
         const active=idx===currentExerciseIndex?'active':'';
         const doneClass=hasDone?'done':'';
         return `<div class="exercise-dot ${active} ${doneClass}" data-step="${idx+1}" onclick="switchExercise(${idx})">${escapeHtml(ex)}</div>`;
@@ -3617,8 +3627,8 @@ function renderExerciseStrip() {
 function updateWorkoutProgressUI(){
     const activeIndices=getActiveExerciseIndices();
     const total=activeIndices.length;
-    const completed=activeIndices.reduce((n,idx)=> n + ((workoutSets[idx]||[]).some(s=>s.done)?1:0), 0);
-    const totalSets=Object.values(workoutSets).reduce((n,sets)=>n+sets.filter(s=>s.done).length,0);
+    const completed=activeIndices.reduce((n,idx)=> n + (countWorkoutSetResults(idx)>0?1:0), 0);
+    const totalSets=activeIndices.reduce((n,idx)=>n+countWorkoutSetResults(idx),0);
     const pct=total?Math.round((completed/total)*100):0;
     const bar=document.getElementById('workoutProgressBar');
     if(bar) bar.style.width=pct+'%';
@@ -3627,7 +3637,7 @@ function updateWorkoutProgressUI(){
     const right=document.getElementById('workoutProgressRight');
     const currentReal=activeIndices[currentExerciseIndex];
     const currentMeta=currentReal!==undefined?getWorkoutExercise(currentReal):null;
-    const currentDone=(currentReal!==undefined?(workoutSets[currentReal]||[]).filter(s=>s.done).length:0);
+    const currentDone=(currentReal!==undefined?countWorkoutSetResults(currentReal):0);
     if(right) right.textContent=currentMeta?.type==='strength' ? `${Math.min(currentDone,3)}/3 подходов выполнено` : `${currentDone} подходов выполнено`;
     const text=document.getElementById('workoutProgressText');
     if(text) text.textContent=`Упражнение ${Math.min(currentExerciseIndex+1,total)} из ${total}`;
@@ -3942,7 +3952,7 @@ function renderExerciseBase() {
     const meta=getWorkoutExercise(realIdx); if(!meta){ finishWorkout(); return; }
     const exerciseName=meta.name, type=meta.type, sets=workoutSets[realIdx]||[];
     const isLastExercise=currentExerciseIndex===activeEx.length-1;
-    const completedSets=sets.filter(s=>s.done).length;
+    const completedSets=sets.filter(s=>hasWorkoutSetResult(realIdx,s)).length;
     const target=type==='strength'?3:1;
 
     const titleEl=document.getElementById('workoutTitle');
@@ -3963,7 +3973,10 @@ function renderExerciseBase() {
     const recommendationHtml=`<div class="workout-recommendation ${recCollapsed?'is-collapsed':''}" data-rec-key="${escapeHtml(recKey)}" onclick="toggleWorkoutRecommendation('${escapeHtml(recKey)}')" role="button" tabindex="0" aria-expanded="${!recCollapsed}"><div class="recommendation-head"><span>💡 Рабочие показатели</span><span class="recommendation-toggle">${recCollapsed?'⌄':'✓'}</span></div><div class="recommendation-main">${recommendationMain}</div><div class="recommendation-note">${escapeHtml(recommendation.reason)}</div></div>`;
 
     let setsHTML='';
-    sets.forEach((s,i)=>{ setsHTML += buildWorkoutSetRowHtml(realIdx,type,s,i); });
+    sets.forEach((s,i)=>{
+        if(i===3 && type==='strength') setsHTML += '<div class="workout-extra-set-label">Дополнительные подходы · необязательно</div>';
+        setsHTML += buildWorkoutSetRowHtml(realIdx,type,s,i);
+    });
 
     const bars=Array.from({length:target},(_,i)=>`<span class="completion-segment ${i<Math.min(completedSets,target)?'filled':''}"></span>`).join('');
     const directoryItem=(data.exerciseDirectory||[]).find(e=>normalizeExerciseKey(e.name)===normalizeExerciseKey(exerciseName));
@@ -4046,7 +4059,7 @@ function updateWorkoutCompletionUI(){
     if(!meta) return;
     const sets=workoutSets[realIdx]||[];
     const target=meta.type==='strength'?3:1;
-    const completed=sets.filter(s=>s.done).length;
+    const completed=countWorkoutSetResults(realIdx);
     const card=document.querySelector('#exerciseContainer .workout-exercise-card');
     if(!card) return;
     const count=card.querySelector('.workout-completion-head strong');
@@ -4143,7 +4156,7 @@ function markSetDone(exIdx, setIdx) {
     const currentMeta = getWorkoutExercise(exIdx);
     const currentSets = workoutSets[exIdx] || [];
     const targetSets = (currentMeta?.type || 'strength') === 'strength' ? 3 : 1;
-    const completedNow = currentSets.filter(s => s && s.done).length;
+    const completedNow = countWorkoutSetResults(exIdx);
     const shownDone = Math.min(completedNow, targetSets);
 
     const completionStrong = document.querySelector('#exerciseContainer .workout-completion-head strong');
@@ -4285,6 +4298,13 @@ function isWorkoutSetFilledForResult(set,type='strength'){
     if(type==='bodyweight') return positive(set.reps);
     // Силовой подход считается результатом только при заполнении ОБОИХ полей.
     return positive(set.weight) && positive(set.reps);
+}
+function hasWorkoutSetResult(exIdx,set){
+    const meta=getWorkoutExercise(exIdx);
+    return isWorkoutSetFilledForResult(set,meta?.type||'strength');
+}
+function countWorkoutSetResults(exIdx){
+    return (workoutSets[exIdx]||[]).filter(s=>hasWorkoutSetResult(exIdx,s)).length;
 }
 
 function finishWorkout() {
@@ -8017,7 +8037,7 @@ function adjustRestTime(delta){
   updateWorkoutProgressUI = function(){
     const activeIndices=getActiveExerciseIndices();
     const total=activeIndices.length;
-    const completed=activeIndices.reduce((n,idx)=>n+(((workoutSets[idx]||[]).some(s=>s && s.done))?1:0),0);
+    const completed=activeIndices.reduce((n,idx)=>n+(countWorkoutSetResults(idx)>0?1:0),0);
     const pct=total?Math.round((completed/total)*100):0;
     const bar=document.getElementById('workoutProgressBar');
     if(bar) bar.style.width=pct+'%';
@@ -11057,7 +11077,7 @@ window.closeImportConfirm=function(){
   // Keep one progress implementation and make its calculation explicitly based on completed checkbox states.
   updateWorkoutProgressUI=function(){
     const active=getActiveExerciseIndices();let done=0,total=0;
-    active.forEach(idx=>{const meta=getWorkoutExercise(idx);if(!meta)return;const completed=(workoutSets[idx]||[]).filter(s=>s&&s.done).length;if((meta.type||'strength')==='strength'){total+=3;done+=Math.min(3,completed);}else{total+=1;done+=completed>0?1:0;}});
+    active.forEach(idx=>{const meta=getWorkoutExercise(idx);if(!meta)return;const completed=countWorkoutSetResults(idx);if((meta.type||'strength')==='strength'){total+=3;done+=Math.min(3,completed);}else{total+=1;done+=completed>0?1:0;}});
     const pct=total?Math.round(done/total*100):0;
     const bar=document.getElementById('workoutProgressBar');const left=document.getElementById('workoutProgressLeft');const right=document.getElementById('workoutProgressRight');const text=document.getElementById('workoutProgressText');
     if(bar)bar.style.width=pct+'%';if(left)left.textContent=total?`Выполнено ${done} из ${total} подходов`:'Нет упражнений';if(right)right.textContent='';if(text)text.textContent='';
