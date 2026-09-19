@@ -1,18 +1,25 @@
-# FTracker v1.8.28 — Dynamic Index audit fixes
+# FTracker v1.8.29 — Dynamic Index Audit Fixes
 
-## Completed
-- Custom body calculations use only records inside the selected evaluation window.
-- Future training and nutrition records are excluded.
-- `fScoreClamp()` rejects non-finite values and normalizes invalid bounds.
-- Training frequency is scaled to the actual evaluation window rather than a fixed 13–17-session range.
-- Removed the unused repetition-score calculation from the Dynamic Index aggregation.
-- Added `audit-tests.js` with range and non-finite-value invariants.
-- Synchronized version identifiers in the application release metadata, manifest and service worker to 1.8.28.
+## Исправлено
+- Версия синхронизирована во всех release-метаданных, `index.html`, `app.js`, `manifest.json`, `sw.js` и отображении приложения: **v1.8.29 от 19.09.26**.
+- Service Worker и cache переведены на `1.8.29`.
+- Системность теперь оценивается по частоте тренировок в неделю. Регулярные 2–5 тренировок/нед не штрафуются только за частоту; отдельно учитывается равномерность.
+- В тренировочном блоке убран отдельный вес для рабочего веса и 1ПМ: они объединены в один сигнал **«Силовая динамика»**. Стандартные веса: **45% системность / 35% силовая динамика / 20% объём**.
+- Тренд силовых показателей стал устойчивее: используется робастный тренд по реальным датам, а не простое сравнение средних первой и второй половины периода.
+- Для редких замеров тела расчёт направления также переведён на реальное время между измерениями; EMA не используется как временная шкала для редких точек.
+- Питание при малом количестве записей больше не может сразу получить полный вес. При 2–14 заполненных днях оценка плавно приближается к нейтральным 50; отсутствие записи не считается плохим питанием.
+- Для пользовательской цели частота тренировок теперь задаётся в **тренировках в неделю**. Старые значения формата «15 за 30 дней» автоматически нормализуются.
+- Упрощена методика Индекса: единый термин **«Качество данных»**, закрытые по умолчанию подробные секции, более короткие пользовательские формулировки.
+- Экран аналитики получил компактное кольцо Индекса вместо обычной полосы прогресса.
+- Изменение Индекса без 30-дневной точки теперь показывает фактический период сравнения в днях.
 
-## Data rules
-- Missing data remains unavailable and is not replaced with records outside the selected period.
-- Nutrition days are aggregated by date; only recorded intake is scored, and no unrecorded meals are fabricated.
+## Сохраняется
+- Стандартные веса блоков: **Тело 40% / Тренировки 30% / Питание 30%**.
+- Отсутствующие данные не превращаются автоматически в ноль.
+- Исторические данные и пользовательские цели не удаляются.
+- Импорт/экспорт, восстановление и остальные разделы приложения не переписывались без необходимости.
 
-## Verification
-- Run `node audit-tests.js` for scoring invariants.
-- iOS PWA Safe Area, scrolling, modal layering and import/restore require device-level runtime testing.
+## Проверка
+- `node --check app.js`
+- `node audit-tests.js`
+- Для PWA после установки новой версии требуется обычная device-level проверка iOS Safari/PWA: cache, safe area, scrolling, модальные окна, импорт/восстановление.
