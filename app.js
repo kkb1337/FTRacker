@@ -1288,9 +1288,8 @@ function fScoreCustomBody(cfg){
         if(!Number.isFinite(target)||target<=0)return;
         const previous=series.filter(x=>x.date>=start&&x.date<mid);
         const currentRows=series.filter(x=>x.date>=mid&&x.date<=now);
-        const fallbackPrev=previous.length?previous:series.filter(x=>x.date<mid).slice(-1);
-        const fallbackCurrent=currentRows.length?currentRows:series.filter(x=>x.date<=now).slice(-1);
-        const previousValue=avg(fallbackPrev), current=avg(fallbackCurrent);
+        // Comparisons use only measurements inside the selected evaluation window.
+        const previousValue=avg(previous), current=avg(currentRows);
         if(!Number.isFinite(current))return;
         const hasComparison=Number.isFinite(previousValue);
         const change=hasComparison?current-previousValue:0;
@@ -1380,21 +1379,30 @@ function setFScoreGoal(goal){
     }
     showToast(`Цель «${getGoalNutritionLabel(goal)}»: лимиты КБЖУ пересчитаны`);
 }
-function fScoreClamp(v,min=0,max=100){return Math.max(min,Math.min(max,v));}
+function fScoreClamp(v,min=0,max=100){
+    v=Number(v);
+    if(!Number.isFinite(v)) return null;
+    min=Number.isFinite(Number(min))?Number(min):0;
+    max=Number.isFinite(Number(max))?Number(max):100;
+    if(min>max){const t=min;min=max;max=t;}
+    return Math.max(min,Math.min(max,v));
+}
 function fScoreRecent(history,daysStart,daysEnd=0){
-    const now=Date.now(),lo=now-daysStart*86400000,hi=daysEnd?now-daysEnd*86400000:Infinity;
+    const now=Date.now(),lo=now-daysStart*86400000,hi=daysEnd?now-daysEnd*86400000:now;
     return history.filter(e=>{const t=new Date(e.date).getTime();return Number.isFinite(t)&&t>=lo&&t<hi;});
 }
 function fScorePct(a,b){a=Number(a);b=Number(b);return Number.isFinite(a)&&Number.isFinite(b)&&a!==0?(b-a)/Math.abs(a)*100:null;}
 function fScoreDates(rows){return rows.map(x=>new Date(x.date).getTime()).filter(Number.isFinite).sort((a,b)=>a-b);}
-function fScoreFrequency(count){
-    // 13–17 is the ideal zone; one missed day must not collapse the score.
-    if(count>=13&&count<=17)return 100;
-    if(count===12||count===18)return 96;
-    if(count===11||count===19)return 91;
-    if(count===10||count===20)return 84;
-    if(count===9)return 75;if(count===8)return 66;if(count===7)return 56;if(count===6)return 47;
-    return fScoreClamp(count*7);
+function fScoreFrequency(count, periodDays=90){
+    // The reference target is 15 sessions per 90 days and scales to the actual window.
+    count=Math.max(0,Number(count)||0);
+    periodDays=Math.max(1,Number(periodDays)||90);
+    const ideal=15*periodDays/90;
+    if(ideal<=0)return 0;
+    const ratio=count/ideal;
+    if(ratio>=0.9&&ratio<=1.15)return 100;
+    if(ratio>1.15)return fScoreClamp(100-(ratio-1.15)*35);
+    return fScoreClamp(ratio*100);
 }
 function fScoreDistribution(history){
     const d=fScoreDates(history); if(!d.length)return null;
@@ -1403,12 +1411,12 @@ function fScoreDistribution(history){
     const score=maxGap<=5?100:maxGap<=7?96:maxGap<=10?88:maxGap<=14?76:maxGap<=21?58:maxGap<=30?40:20;
     return {score,maxGap};
 }
-function fScoreTrainingConsistency(recent,previous){
+function fScoreTrainingConsistency(recent,previous,periodDays=90){
     if(!recent.length)return {score:null,frequency:null,distribution:null,count:0};
-    const frequency=fScoreFrequency(recent.length);
+    const frequency=fScoreFrequency(recent.length,periodDays);
     const distribution=fScoreDistribution(recent);
     // Historical smoothing protects a normally systematic user from one bad month.
-    const prevFreq=previous.length?fScoreFrequency(previous.length):null;
+    const prevFreq=previous.length?fScoreFrequency(previous.length,periodDays):null;
     let current=.60*frequency+.40*(distribution?distribution.score:65);
     if(prevFreq!=null) current=.80*current+.20*prevFreq;
     return {score:fScoreClamp(current),frequency,distribution,count:recent.length};
@@ -1674,11 +1682,10 @@ function renderFScoreCustomEditorMarkup(){
     </div>`;
 }
 function fScoreTraining(recent,prev,history,goal,customCfg=null){
-    const consistency=customCfg?.training?.target?fScoreTrainingConsistencyCustom(recent,prev,Number(customCfg.training.target)||15):fScoreTrainingConsistency(recent,prev);
     const periodDays=customCfg?Math.max(7,Number(customCfg.evaluationDays)||90):90;
-    const working=fScoreWorkingWeightTrend(history,periodDays,goal),repChange=fScoreRepTrend(history,periodDays);
+    const consistency=customCfg?.training?.target?fScoreTrainingConsistencyCustom(recent,prev,Number(customCfg.training.target)||15):fScoreTrainingConsistency(recent,prev,periodDays);
+    const working=fScoreWorkingWeightTrend(history,periodDays,goal);
     const workingScore=working.available?working.score:null;
-    const reps=fScoreRepGoalScore(goal,repChange);
     const performance=fScorePerformanceSignals(history,periodDays);
     const e1rmScore=performance.available?fScorePerformanceGoalScore(goal,performance.e1rm):null;
     const volumeScore=performance.available?fScorePerformanceGoalScore(goal,performance.volume):null;
@@ -1692,9 +1699,9 @@ function fScoreTraining(recent,prev,history,goal,customCfg=null){
         {score:e1rmScore,weight:Number(trainingWeights.e1rm)||0,name:'Сила (Расчётный 1ПМ)'},
         {score:volumeScore,weight:Number(trainingWeights.volume)||0,name:'Объём'}
     ].filter(p=>Number.isFinite(p.score)&&p.weight>0);
-    if(!parts.length)return {score:null,available:false,consistency,working,reps,performance,periodDays,parts:[]};
+    if(!parts.length)return {score:null,available:false,consistency,working,performance,periodDays,parts:[]};
     const tw=parts.reduce((a,p)=>a+p.weight,0);
-    return {score:parts.reduce((a,p)=>a+p.score*p.weight,0)/tw,available:true,consistency,working,reps,performance,periodDays,parts};
+    return {score:parts.reduce((a,p)=>a+p.score*p.weight,0)/tw,available:true,consistency,working,performance,periodDays,parts};
 }
 function fScoreNutrition(goal, customCfg=null, periodDays=90){
     const entries=(data.foodDiary?.entries||[]).filter(e=>e&&e.date);
@@ -1703,7 +1710,8 @@ function fScoreNutrition(goal, customCfg=null, periodDays=90){
     const now=Date.now(),by={};
     entries.forEach(e=>{
         const date=String(e.date||''),t=new Date(date+'T12:00:00').getTime();
-        if(!date||!Number.isFinite(t)||now-t>daysLimit*86400000||t-now>86400000)return;
+        const cutoff=now-daysLimit*86400000;
+        if(!date||!Number.isFinite(t)||t<cutoff||t>now)return;
         const x=by[date]||(by[date]={cal:0,protein:0,fat:0,carbs:0});
         x.cal+=Number(e.calories)||0;x.protein+=Number(e.protein)||0;x.fat+=Number(e.fat)||0;x.carbs+=Number(e.carbs)||0;
     });
