@@ -896,9 +896,9 @@ function getFScoreCustomGoals(){
             }
             const bw=c.blockWeights&&typeof c.blockWeights==='object'?c.blockWeights:{};
             const nums={body:Number(bw.body),training:Number(bw.training),nutrition:Number(bw.nutrition)};
-            const valid=Object.values(nums).every(Number.isFinite)&&Object.values(nums).every(v=>v>=0)&&Object.values(nums).some(v=>v>0);
+            const valid=Object.values(nums).every(Number.isFinite)&&Object.values(nums).every(v=>v>=0)&&Object.values(nums).some(v=>v>0); const bwSum=Object.values(nums).reduce((a,b)=>a+b,0)||100; const normBW=valid?{body:Math.round(nums.body/bwSum*100),training:Math.round(nums.training/bwSum*100),nutrition:Math.round(nums.nutrition/bwSum*100)}:{body:40,training:30,nutrition:30}; normBW.nutrition+=100-(normBW.body+normBW.training+normBW.nutrition);
             const tr=c.training&&typeof c.training==='object'?c.training:{}; const tw=tr.weights&&typeof tr.weights==='object'?tr.weights:{}; const rawTW={systemity:Number(tw.systemity),working:Number(tw.working),e1rm:Number(tw.e1rm),volume:Number(tw.volume)}; const validTW=Object.values(rawTW).every(Number.isFinite)&&Object.values(rawTW).every(v=>v>=0)&&Object.values(rawTW).some(v=>v>0); const normTW=validTW?Object.fromEntries(Object.entries(rawTW).map(([k,v])=>[k,Math.round(v/Object.values(rawTW).reduce((a,b)=>a+b,0)*100)])):{systemity:50,working:25,e1rm:10,volume:15}; const twSum=Object.values(normTW).reduce((a,b)=>a+b,0); if(twSum!==100)normTW.volume+=(100-twSum); const nu=c.nutrition&&typeof c.nutrition==='object'?c.nutrition:{};
-            return {id:String(c.id||('cg_legacy_'+i)),name:String(c.name||'').trim().slice(0,40),mode:['gain','cut','maintain'].includes(c.mode)?c.mode:'maintain',evaluationDays:Math.max(7,Math.min(365,Number(c.evaluationDays)||90)),targets,training:{target:Math.max(1,Number(tr.target)||15),period:String(Math.max(7,Math.min(365,Number(tr.period)||30))),weights:normTW},nutrition:{auto:nu.auto!==false,calories:Math.max(0,Number(nu.calories)||0),protein:Math.max(0,Number(nu.protein)||0),fat:Math.max(0,Number(nu.fat)||0),carbs:Math.max(0,Number(nu.carbs)||0),toleranceCalories:Math.max(0,Number.isFinite(Number(nu.toleranceCalories))?Number(nu.toleranceCalories):10),toleranceProtein:Math.max(0,Number.isFinite(Number(nu.toleranceProtein))?Number(nu.toleranceProtein):10),toleranceFat:Math.max(0,Number.isFinite(Number(nu.toleranceFat))?Number(nu.toleranceFat):10),toleranceCarbs:Math.max(0,Number.isFinite(Number(nu.toleranceCarbs))?Number(nu.toleranceCarbs):10)},blockWeights:valid?nums:{body:40,training:30,nutrition:30}};
+            return {id:String(c.id||('cg_legacy_'+i)),name:String(c.name||'').trim().slice(0,40),mode:['gain','cut','maintain'].includes(c.mode)?c.mode:'maintain',evaluationDays:Math.max(7,Math.min(365,Number(c.evaluationDays)||90)),targets,training:{target:Math.max(1,Number(tr.target)||15),period:String(Math.max(7,Math.min(365,Number(tr.period)||30))),weights:normTW},nutrition:{auto:nu.auto!==false,calories:Math.max(0,Number(nu.calories)||0),protein:Math.max(0,Number(nu.protein)||0),fat:Math.max(0,Number(nu.fat)||0),carbs:Math.max(0,Number(nu.carbs)||0),toleranceCalories:Math.max(0,Number.isFinite(Number(nu.toleranceCalories))?Number(nu.toleranceCalories):10),toleranceProtein:Math.max(0,Number.isFinite(Number(nu.toleranceProtein))?Number(nu.toleranceProtein):10),toleranceFat:Math.max(0,Number.isFinite(Number(nu.toleranceFat))?Number(nu.toleranceFat):10),toleranceCarbs:Math.max(0,Number.isFinite(Number(nu.toleranceCarbs))?Number(nu.toleranceCarbs):10)},blockWeights:normBW};
         }).filter(c=>c.name);
         // Удаляем старую автоматически созданную заглушку «Моя цель», если существует хотя бы одна реально сохранённая пользовательская цель.
         // Это миграция старого UX: новая пустая цель больше никогда не создаётся автоматически.
@@ -1264,8 +1264,8 @@ function saveFScoreCustomFromUI(){
     document.querySelectorAll('#fscoreCustomTargets .fscore-target-card').forEach(row=>{const key=row.dataset.key,enabled=!!row.querySelector('.fscore-target-enabled')?.checked;if(!key)return;const direction=row.querySelector('.fscore-target-direction')?.value||'maintain',targetInputs=[...row.querySelectorAll('.fscore-target-value')],targetInput=targetInputs.find(i=>!i.closest('.hidden'))||targetInputs[0],target=Number(targetInput?.value),tolInputs=[...row.querySelectorAll('.fscore-target-tolerance')],tolInput=tolInputs.find(i=>i.type!=='hidden')||tolInputs[0],tolerance=Math.max(0,Number(tolInput?.value)||0);targets[key]={direction,target:(Number.isFinite(target)&&target>0)?target:'',tolerance,enabled};});
     if(!Object.keys(targets).length){showToast('Добавьте хотя бы один параметр тела');return;}
     if(!Object.values(targets).some(t=>t.enabled!==false)){showToast('Включите хотя бы один параметр для расчёта Индекса');return;}
-    const body=Math.max(0,Math.min(100,Number(document.getElementById('fscoreCustomBodyWeight')?.value)||0)),training=Math.max(0,Math.min(100,Number(document.getElementById('fscoreCustomTrainingWeight')?.value)||0)),nutritionWeight=Math.max(0,Math.min(100,Number(document.getElementById('fscoreCustomNutritionWeight')?.value)||0));
-    const trainingTarget=Math.max(1,Number(document.getElementById('fscoreCustomTrainingTarget')?.value)||15),trainingPeriod=Math.max(7,Math.min(365,Number(document.getElementById('fscoreCustomTrainingPeriod')?.value)||30)),trainingWeights={systemity:Math.max(0,Number(document.getElementById('fscoreCustomTrainingSystemityWeight')?.value)||0),working:Math.max(0,Number(document.getElementById('fscoreCustomTrainingWorkingWeight')?.value)||0),e1rm:Math.max(0,Number(document.getElementById('fscoreCustomTrainingE1RMWeight')?.value)||0),volume:Math.max(0,Number(document.getElementById('fscoreCustomTrainingVolumeWeight')?.value)||0)},trainingWeightSum=Object.values(trainingWeights).reduce((a,b)=>a+b,0); if(trainingWeightSum<=0){showToast('Укажите вес хотя бы для одного показателя тренировки');return;} Object.keys(trainingWeights).forEach(k=>trainingWeights[k]=Math.round(trainingWeights[k]/trainingWeightSum*100)); trainingWeights.volume+=(100-Object.values(trainingWeights).reduce((a,b)=>a+b,0)); evaluationDays=Math.max(7,Math.min(365,Number(document.getElementById('fscoreCustomEvaluationDays')?.value)||90));
+    let body=Math.max(0,Math.min(100,Number(document.getElementById('fscoreCustomBodyWeight')?.value)||0)),training=Math.max(0,Math.min(100,Number(document.getElementById('fscoreCustomTrainingWeight')?.value)||0)),nutritionWeight=Math.max(0,Math.min(100,Number(document.getElementById('fscoreCustomNutritionWeight')?.value)||0)); const blockWeightSum=body+training+nutritionWeight; if(blockWeightSum<=0){showToast('Укажите вес хотя бы одного блока');return;} const bw={body:Math.round(body/blockWeightSum*100),training:Math.round(training/blockWeightSum*100),nutrition:Math.round(nutritionWeight/blockWeightSum*100)}; bw.nutrition+=100-(bw.body+bw.training+bw.nutrition); body=bw.body;training=bw.training;nutritionWeight=bw.nutrition;
+    const trainingTarget=Math.max(1,Number(document.getElementById('fscoreCustomTrainingTarget')?.value)||15),trainingPeriod=Math.max(7,Math.min(365,Number(document.getElementById('fscoreCustomTrainingPeriod')?.value)||30)),trainingWeights={systemity:Math.max(0,Number(document.getElementById('fscoreCustomTrainingSystemityWeight')?.value)||0),working:Math.max(0,Number(document.getElementById('fscoreCustomTrainingWorkingWeight')?.value)||0),e1rm:Math.max(0,Number(document.getElementById('fscoreCustomTrainingE1RMWeight')?.value)||0),volume:Math.max(0,Number(document.getElementById('fscoreCustomTrainingVolumeWeight')?.value)||0)},trainingWeightSum=Object.values(trainingWeights).reduce((a,b)=>a+b,0); if(trainingWeightSum<=0){showToast('Укажите вес хотя бы для одного показателя тренировки');return;} Object.keys(trainingWeights).forEach(k=>trainingWeights[k]=Math.round(trainingWeights[k]/trainingWeightSum*100)); trainingWeights.volume+=(100-Object.values(trainingWeights).reduce((a,b)=>a+b,0)); const evaluationDays=Math.max(7,Math.min(365,Number(document.getElementById('fscoreCustomEvaluationDays')?.value)||90));
     const nutrition={auto:document.getElementById('fscoreCustomNutritionAuto')?.value!=='manual',calories:Math.max(0,Number(document.getElementById('fscoreCustomCalories')?.value)||0),protein:Math.max(0,Number(document.getElementById('fscoreCustomProtein')?.value)||0),fat:Math.max(0,Number(document.getElementById('fscoreCustomFat')?.value)||0),carbs:Math.max(0,Number(document.getElementById('fscoreCustomCarbs')?.value)||0),toleranceCalories:Math.max(0,Number(document.getElementById('fscoreCustomCalTol')?.value)||0),toleranceProtein:Math.max(0,Number(document.getElementById('fscoreCustomProteinTol')?.value)||0),toleranceFat:Math.max(0,Number(document.getElementById('fscoreCustomFatTol')?.value)||0),toleranceCarbs:Math.max(0,Number(document.getElementById('fscoreCustomCarbsTol')?.value)||0)};
     if(!nutrition.auto && !(nutrition.calories||nutrition.protein||nutrition.fat||nutrition.carbs)){showToast('Для ручного режима задайте хотя бы одну цель КБЖУ');return;}
     if(body+training+nutritionWeight<=0){showToast('Укажите вес хотя бы для одного блока');return;}
@@ -1668,7 +1668,7 @@ function renderFScoreCustomEditorMarkup(){
       <div class="fscore-evaluation-field"><div class="fscore-field-heading"><b>Период оценки</b></div><div class="fscore-period-presets"><button type="button" class="fscore-period-preset ${Number(c.evaluationDays)===30?'active':''}" data-days="30" onclick="setFScorePeriodPreset(30)">30</button><button type="button" class="fscore-period-preset ${Number(c.evaluationDays)===60?'active':''}" data-days="60" onclick="setFScorePeriodPreset(60)">60</button><button type="button" class="fscore-period-preset ${Number(c.evaluationDays)===90?'active':''}" data-days="90" onclick="setFScorePeriodPreset(90)">90</button><button type="button" class="fscore-period-preset ${Number(c.evaluationDays)===180?'active':''}" data-days="180" onclick="setFScorePeriodPreset(180)">180</button><button type="button" class="fscore-period-custom-btn" onclick="setFScoreCustomPeriodMode('custom')">Свой</button></div><input id="fscoreCustomPeriodMode" type="hidden" value="preset"><div id="fscoreCustomPeriodInputWrap" class="hidden"><input id="fscoreCustomEvaluationDays" type="number" min="7" max="365" value="${c.evaluationDays}" oninput="updateFScoreEvaluationDaysFromUI()"><small>дней</small></div></div>
       <section class="fscore-custom-section fscore-factor-weight-section"><div class="fscore-factor-weight-heading"><b>⚖️ Вес факторов</b><strong id="fscoreCustomWeightTotal">${(Number(c.blockWeights?.body)||40)+(Number(c.blockWeights?.training)||30)+(Number(c.blockWeights?.nutrition)||30)}%</strong></div><div class="fscore-custom-weights"><label><span>Тело</span><input id="fscoreCustomBodyWeight" type="number" min="0" max="100" value="${c.blockWeights?.body??40}" oninput="rebalanceFScoreWeights('body')"><em>%</em></label><label><span>Тренировки</span><input id="fscoreCustomTrainingWeight" type="number" min="0" max="100" value="${c.blockWeights?.training??30}" oninput="rebalanceFScoreWeights('training')"><em>%</em></label><label><span>Питание</span><input id="fscoreCustomNutritionWeight" type="number" min="0" max="100" value="${c.blockWeights?.nutrition??30}" oninput="rebalanceFScoreWeights('nutrition')"><em>%</em></label></div></section>
       <details class="fscore-custom-section fscore-targets-section" aria-label="Параметры тела"><summary><span>📏 Параметры тела</span></summary><div class="fscore-target-intro"><div class="fscore-target-count" id="fscoreTargetCount">Учитываются: ${activeTargetCount} из ${fields.length}</div></div><div class="fscore-target-rules"><b>Рост</b> — выше текущего · <b>Снижение</b> — ниже · <b>Стабильность</b> — в допустимом коридоре</div><div id="fscoreCustomTargets" class="fscore-custom-targets">${rows}</div><button type="button" class="fscore-inactive-toggle" aria-expanded="true" onclick="toggleFScoreInactiveTargets(this)">Скрыть неактивные параметры${inactiveTargetCount?` · ${inactiveTargetCount}`:''}</button></details>
-      <details class="fscore-custom-section fscore-training-section"><summary>🏋️ Тренировки</summary><div class="fscore-custom-training"><label>Тренировок<input id="fscoreCustomTrainingTarget" type="number" min="1" max="100" value="${c.training?.target||15}"></label><label>Период системности, дней<input id="fscoreCustomTrainingPeriod" type="number" min="7" max="365" value="${c.training?.period||30}"></label></div><div class="fscore-training-weight-editor"><div class="fscore-training-weight-head"><span>Вес показателей</span><b id="fscoreCustomTrainingWeightTotal">${Object.values(c.training?.weights||{systemity:50,working:25,e1rm:10,volume:15}).reduce((a,b)=>a+(Number(b)||0),0)}%</b></div><div class="fscore-training-weight-grid"><label>Системность<input id="fscoreCustomTrainingSystemityWeight" type="number" min="0" max="100" value="${c.training?.weights?.systemity??50}" oninput="rebalanceFScoreTrainingWeights('systemity')"></label><label>Рабочие веса<input id="fscoreCustomTrainingWorkingWeight" type="number" min="0" max="100" value="${c.training?.weights?.working??25}" oninput="rebalanceFScoreTrainingWeights('working')"></label><label>Расчётный 1ПМ<input id="fscoreCustomTrainingE1RMWeight" type="number" min="0" max="100" value="${c.training?.weights?.e1rm??10}" oninput="rebalanceFScoreTrainingWeights('e1rm')"></label><label>Объём<input id="fscoreCustomTrainingVolumeWeight" type="number" min="0" max="100" value="${c.training?.weights?.volume??15}" oninput="rebalanceFScoreTrainingWeights('volume')"></label></div></div></details>
+      <details class="fscore-custom-section fscore-training-section"><summary>🏋️ Тренировки</summary><div class="fscore-custom-training"><label>Тренировок<input id="fscoreCustomTrainingTarget" type="number" min="1" max="100" value="${c.training?.target||15}"></label><label>Период системности, дней<input id="fscoreCustomTrainingPeriod" type="number" min="7" max="365" value="${Math.min(Number(c.evaluationDays)||90,Number(c.training?.period)||30)}"></label></div><div class="fscore-training-weight-editor"><div class="fscore-training-weight-head"><span>Вес показателей</span><b id="fscoreCustomTrainingWeightTotal">${Object.values(c.training?.weights||{systemity:50,working:25,e1rm:10,volume:15}).reduce((a,b)=>a+(Number(b)||0),0)}%</b></div><div class="fscore-training-weight-grid"><label>Системность<input id="fscoreCustomTrainingSystemityWeight" type="number" min="0" max="100" value="${c.training?.weights?.systemity??50}" oninput="rebalanceFScoreTrainingWeights('systemity')"></label><label>Рабочие веса<input id="fscoreCustomTrainingWorkingWeight" type="number" min="0" max="100" value="${c.training?.weights?.working??25}" oninput="rebalanceFScoreTrainingWeights('working')"></label><label>Расчётный 1ПМ<input id="fscoreCustomTrainingE1RMWeight" type="number" min="0" max="100" value="${c.training?.weights?.e1rm??10}" oninput="rebalanceFScoreTrainingWeights('e1rm')"></label><label>Объём<input id="fscoreCustomTrainingVolumeWeight" type="number" min="0" max="100" value="${c.training?.weights?.volume??15}" oninput="rebalanceFScoreTrainingWeights('volume')"></label></div></div></details>
       <details class="fscore-custom-section fscore-nutrition-section"><summary>🍽️ Питание</summary><select id="fscoreCustomNutritionAuto" onchange="toggleFScoreNutritionMode()"><option value="auto" ${c.nutrition?.auto!==false?'selected':''}>Автоматически</option><option value="manual" ${c.nutrition?.auto===false?'selected':''}>Вручную</option></select><div class="fscore-manual-nutrition ${c.nutrition?.auto===false?'':'hidden'}"><div class="fscore-nutrition-default-note">Допуск: ±10% от цели.</div><div class="fscore-custom-kbju"><label>Ккал<input id="fscoreCustomCalories" type="number" value="${c.nutrition?.calories||getGoalNutritionProfile(c.mode||'maintain').calories}"></label><label>Белок<input id="fscoreCustomProtein" type="number" value="${c.nutrition?.protein||getGoalNutritionProfile(c.mode||'maintain').protein}"></label><label>Жиры<input id="fscoreCustomFat" type="number" value="${c.nutrition?.fat||getGoalNutritionProfile(c.mode||'maintain').fat}"></label><label>Углеводы<input id="fscoreCustomCarbs" type="number" value="${c.nutrition?.carbs||getGoalNutritionProfile(c.mode||'maintain').carbs}"></label></div></div></details>
       <div class="fscore-goal-editor-actions"><button type="button" class="fscore-custom-save" onclick="saveFScoreCustomFromUI()">Сохранить цель</button>${c.id?`<button type="button" class="fscore-custom-delete-goal" onclick="deleteFScoreCustomGoal('${escapeHtml(c.id)}')">Удалить цель</button>`:''}</div>
     </div>`;
@@ -1734,8 +1734,10 @@ function fScoreNutrition(goal, customCfg=null, periodDays=90){
 function fScoreData(){
     const h=(data.history||[]).filter(e=>e&&e.date).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
     const goal=getFScoreGoal(),custom=goal==='custom'?getFScoreCustomConfig():null;
-    const evaluationDays=custom?Math.max(7,Number(custom.evaluationDays)||90):90;
-    const consistencyDays=custom?Math.max(7,Number(custom.training?.period)||30):30;
+    const evaluationDays=custom?Math.max(7,Math.min(365,Number(custom.evaluationDays)||90)):90;
+    // The evaluation period is the single public calculation window. A custom
+    // training consistency window may be shorter, but never extends beyond it.
+    const consistencyDays=custom?Math.min(evaluationDays,Math.max(7,Number(custom.training?.period)||30)):Math.min(evaluationDays,30);
     const recent=fScoreRecent(h,consistencyDays),prev=fScoreRecent(h,consistencyDays*2,consistencyDays),engineGoal=custom?.mode||goal;
     const body=custom?fScoreCustomBody(custom):fScoreBody(engineGoal,evaluationDays);
     const training=fScoreTraining(recent,prev,h,engineGoal,custom);
@@ -1748,22 +1750,49 @@ function fScoreData(){
     const available=blocks.filter(x=>Number.isFinite(x.score)&&x.weight>0);
     const totalWeight=available.reduce((a,b)=>a+b.weight,0);
     const score=totalWeight?Math.round(available.reduce((a,b)=>a+b.score*b.weight,0)/totalWeight):0;
-    const measurements=(data.measurements||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+    const now=Date.now();
+    const evaluationCutoff=now-Math.max(7,Number(evaluationDays)||90)*86400000;
+    // Quality of data must use the same evaluation window as the index itself.
+    // Otherwise old measurements could make the quality look better than the
+    // actual data available for the selected period.
+    const measurements=(data.measurements||[]).filter(m=>{
+        const t=new Date(m?.date).getTime();
+        return Number.isFinite(t)&&t>=evaluationCutoff&&t<=now;
+    }).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
     const measureCount=measurements.length, first=measurements[0], last=measurements[measurements.length-1], days=first&&last?(new Date(last.date)-new Date(first.date))/86400000:0;
     const bodyItems=getFScoreBodyDisplayItems(measurements);
     const bodyDataCount=bodyItems.filter(i=>i.has).length;
-    const bodySelectedCount=custom ? Object.entries(custom.targets||{}).filter(([k,t])=>t?.enabled!==false && bodyItems.some(i=>i.key===k)).length : bodyItems.length;
-    const bodySelectedWithData=custom ? Object.entries(custom.targets||{}).filter(([k,t])=>t?.enabled!==false && bodyItems.some(i=>i.key===k&&i.has)).length : bodyDataCount;
-    const confidenceParts=[];
-    if(body.available) confidenceParts.push(Math.min(100,35+bodyDataCount*10+(measureCount>=2?25:0)+(measureCount>=4?20:0)));
-    if(training.available) confidenceParts.push(Math.min(100,35+recent.length*4+(training.performance?.available?25:0)));
-    if(nutrition.available) confidenceParts.push(Math.min(100,Math.round((nutrition.coverage||0)*100*0.55+45)));
-    const confidence=confidenceParts.length?Math.round(confidenceParts.reduce((a,b)=>a+b,0)/confidenceParts.length):0;
+    const selectedBodyKeys=custom ? Object.entries(custom.targets||{}).filter(([k,t])=>t?.enabled!==false && bodyItems.some(i=>i.key===k)).map(([k])=>k) : bodyItems.map(i=>i.key);
+    const bodySelectedCount=selectedBodyKeys.length;
+    const bodySelectedWithData=selectedBodyKeys.filter(k=>bodyItems.some(i=>i.key===k&&i.has)).length;
+    // Keep the quality score explainable: all three data domains are counted,
+    // including a completely missing domain, because it is still a missing input.
+    const bodyConfidence=measureCount<1?0:Math.min(100,30+(measureCount>=2?25:0)+(measureCount>=4?20:0)+(bodySelectedCount?Math.round(25*bodySelectedWithData/bodySelectedCount):0));
+    const trainingConfidence=Math.min(100,(recent.length>=1?25:0)+(recent.length>=3?15:0)+(recent.length>=6?20:0)+(training.performance?.available?25:0)+(recent.length>=10?15:0));
+    const nutritionConfidence=Math.min(100,Math.round((nutrition.coverage||0)*100));
+    const confidence=Math.round((bodyConfidence+trainingConfidence+nutritionConfidence)/3);
     const phase=confidence<55||measureCount<2?'calibration':(confidence>=80&&measureCount>=4&&days>=60?'full':'preliminary');
-    const confidenceLabel=confidence>=85?'Высокая':confidence>=65?'Хорошая':confidence>=45?'Средняя':'Низкая';
+    const confidenceLabel=confidence>=70?'данных достаточно':confidence>=45?'данных частично достаточно':'данных недостаточно';
+    const confidenceMissing=[];
+    if(measureCount<2){
+        confidenceMissing.push(`Нужно ещё ${Math.max(1,2-measureCount)} ${Math.max(1,2-measureCount)===1?'замер':'замера'} тела за выбранный период — сейчас ${measureCount}.`);
+    } else if(bodySelectedCount&&bodySelectedWithData<bodySelectedCount){
+        confidenceMissing.push(`Не заполнены выбранные параметры тела: ${bodyItems.filter(i=>selectedBodyKeys.includes(i.key)&&!i.has).map(i=>i.label).join(', ')}.`);
+    }
+    if(recent.length<6 || !training.performance?.available){
+        const detail=recent.length<6?`тренировок за окно системности ${consistencyDays} дней: ${recent.length}`:'для рабочих весов нужна повторяемая история нагрузки';
+        confidenceMissing.push(`Больше данных по тренировкам (${detail}).`);
+    }
+    if(!nutrition.available){
+        confidenceMissing.push(nutrition.days<2?`Записей питания: ${nutrition.days}. Нужно минимум 2 дня.`:`Больше дней с заполненным питанием за выбранный период — сейчас ${nutrition.days} из ${evaluationDays}.`);
+    } else if((nutrition.coverage||0)<0.5){
+        confidenceMissing.push(`Больше дней с заполненным питанием — сейчас ${nutrition.days} из ${evaluationDays}.`);
+    }
     const statusLevel=!available.length?'attention':score>=80?'good':score>=55?'attention':'bad';
     const status=!available.length?'Пока нет данных':(phase==='calibration'?'Собираем данные':statusLevel==='good'?'Динамика в норме':statusLevel==='attention'?'Есть что улучшить':'Динамика требует внимания');
-    return {score,status,statusLevel,goal,history:h,measures:data.measurements||[],recent,prev,body,training,nutrition,blocks,availableCount:available.length,phase,confidence,confidenceLabel,evaluationDays,consistencyDays,measureCount,bodyDataCount,bodySelectedCount,bodySelectedWithData,weights,totalWeight};
+    const statusReason=!available.length?'Нет доступных блоков для расчёта.':phase==='calibration'?'Расчёт предварительный: системе ещё нужна история данных.':(statusLevel==='good'?'Основные доступные показатели поддерживают выбранную цель.':statusLevel==='attention'?'Есть показатели, которые пока соответствуют цели не полностью.':'Несколько доступных показателей заметно отклоняются от выбранной цели.');
+    const qualityParts={body:Math.round(bodyConfidence/100*33),training:Math.round(trainingConfidence/100*33),nutrition:0}; qualityParts.nutrition=Math.max(0,confidence-qualityParts.body-qualityParts.training);
+    return {score,status,statusLevel,statusReason,goal,history:h,measures:data.measurements||[],recent,prev,body,training,nutrition,blocks,availableCount:available.length,phase,confidence,confidenceLabel,confidenceMissing,evaluationDays,consistencyDays,measureCount,bodyDataCount,bodySelectedCount,bodySelectedWithData,weights,totalWeight,qualityParts};
 }
 function fScoreTrackScoreChange(x){
     const custom=x.goal==='custom'?getFScoreCustomConfig():null;
@@ -1808,12 +1837,11 @@ function fScoreBuildExplanation(x){
     if(x.training?.available){
         const c=x.training.consistency;
         add(c.score>=80?'good':c.score>=60?'attention':'bad','Тренировки',c.score>=80?'Регулярность тренировок поддерживает индекс.':c.score>=60?'Системность тренировок есть, но не максимальная — отдельные пропуски допускаются.':'Недостаточно устойчивой тренировочной системности.');
-    } else add('muted','Тренировки','Недостаточно завершённых тренировок с данными — блок пока не участвует в расчёте.');
+    }
     if(x.nutrition?.available){
         const n=x.nutrition,avg=Math.round(n.score);
         add(avg>=80?'good':avg>=60?'attention':'bad','Питание',avg>=80?`КБЖУ в целом соответствует цели ${goalName} и поддерживает итоговый индекс.`:avg>=60?`Питание частично соответствует цели ${goalName}; этот блок ограничивает итоговый результат.`:`Текущие калории или КБЖУ заметно расходятся с целью ${goalName}.`);
-    } else add('muted','Питание','Питание опционально: без свежих записей оно исключено из формулы и не считается штрафом.');
-    if(x.phase==='calibration') add('attention','Точность','Данных пока недостаточно для полной оценки, поэтому результат предварительный.');
+    }
     return reasons.slice(0,6);
 }
 function fScoreTrendStore(x){
@@ -1923,28 +1951,31 @@ function showFScoreAnalytics(){
 function buildFScoreConclusion(x){
     if(!x.availableCount)return 'Недостаточно данных для оценки. Добавьте тренировки — система начнёт анализировать регулярность, непрерывность и динамику рабочих весов.';
     const ww=x.training.working.available?x.training.working.trend:'динамика рабочих весов пока не оценивается';
-    return `За последние 30 дней записано ${x.recent.length} тренировок. ${ww}. Разовые изменения количества подходов, повторений или отсутствие рекорда не считаются ухудшением — оценивается общая тенденция.`;
+    return `За выбранные ${x.evaluationDays} дней записано ${x.recent.length} тренировок. ${ww}. Разовые изменения количества подходов, повторений или отсутствие рекорда не считаются ухудшением — оценивается общая тенденция.`;
 }
 function getFScoreBodyDisplayItems(measurements){
     const fields=getMeasurementFields();
-    const latest=(measurements||[]).slice().sort((a,b)=>new Date(b.date)-new Date(a.date))[0]||{};
-    const raw=fields.map(f=>({key:f.key,label:f.label,has:Number(latest[f.key])>0}));
-    // В интерфейсе индекса объединяем исторические дубли одного участка:
-    // «Бёдра» и «Бедро». Если заполнены оба — показываем только заполненный
-    // приоритетный показатель, чтобы не создавать ложное впечатление двух разных требований.
+    const rows=(measurements||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+    // Each parameter has its own latest value. A partial newest measurement
+    // must not hide values recorded earlier for other parameters.
+    const latestByKey={};
+    fields.forEach(f=>{
+        for(let i=rows.length-1;i>=0;i--){
+            const value=Number(rows[i]?.[f.key]);
+            if(Number.isFinite(value)&&value>0){latestByKey[f.key]={value,date:rows[i].date};break;}
+        }
+    });
+    const raw=fields.map(f=>({key:f.key,label:f.label,has:!!latestByKey[f.key],date:latestByKey[f.key]?.date||null,value:latestByKey[f.key]?.value??null}));
     const hipLike=raw.filter(i=>i.key==='hips'||i.key==='thigh');
     const rest=raw.filter(i=>i.key!=='hips'&&i.key!=='thigh');
     if(hipLike.length){
-        const chosen=hipLike.find(i=>i.key==='hips'&&i.has)
-          || hipLike.find(i=>i.has)
-          || hipLike.find(i=>i.key==='hips')
-          || hipLike[0];
+        const chosen=hipLike.find(i=>i.key==='hips'&&i.has)||hipLike.find(i=>i.has)||hipLike.find(i=>i.key==='hips')||hipLike[0];
         rest.push({...chosen,label:'Бёдра'});
     }
     return rest;
 }
 function getFScoreNextStep(x,bodyItems){
-    const bodyWithHistory=(data.measurements||[]).length>=2;
+    const bodyWithHistory=Number(x.measureCount||0)>=2;
     if(!bodyWithHistory) return '📏 Сделайте следующий замер в другую дату — история тела станет точнее.';
     if(!x.training.available) return '🏋️ Добавьте завершённую тренировку с заполненными результатами.';
     if(!x.nutrition.available) return '🍽️ Добавьте питание за несколько дней — это уточнит соответствие выбранной цели.';
@@ -2027,9 +2058,15 @@ function renderFScoreAnalytics(){
         <div class="fscore-score-bar"><i style="width:${x.availableCount?x.score:0}%"></i></div>
       </section>
 
-      <section class="fscore-confidence-card" aria-label="Доверие к данным">
-        <div><b>Доверие к данным</b><small>Не входит в Индекс</small></div>
-        <strong>${x.confidence}%</strong><span>${x.confidenceLabel}</span>
+      <section class="fscore-confidence-card" aria-label="Качество данных">
+        <div class="fscore-confidence-head"><b>Качество данных</b><div><strong>${x.confidence}%</strong><span>${x.confidenceLabel}</span></div></div>
+        <div class="fscore-quality-breakdown">
+          <div><span>Тело</span><b>${x.qualityParts.body}%</b><small>из 33%</small></div>
+          <div><span>Тренировки</span><b>${x.qualityParts.training}%</b><small>из 33%</small></div>
+          <div><span>Питание</span><b>${x.qualityParts.nutrition}%</b><small>из 33%</small></div>
+        </div>
+        ${x.confidenceMissing.length?`<div class="fscore-confidence-missing"><b>Чего не хватает:</b><ol>${x.confidenceMissing.map(item=>`<li>${escapeHtml(item)}</li>`).join('')}</ol><div class="fscore-confidence-actions">${x.measureCount<2?`<button type="button" class="fscore-secondary-btn" onclick="showBodyMeasurements()">Добавить замер</button>`:''}${!x.training.available?`<button type="button" class="fscore-secondary-btn" onclick="showHistory()">Добавить тренировку</button>`:''}${!x.nutrition.available?`<button type="button" class="fscore-secondary-btn" onclick="showFoodDiary()">Добавить питание</button>`:''}</div></div>`:`<div class="fscore-confidence-complete">Всё необходимое для расчёта заполнено.</div>`}
+        <small class="fscore-confidence-note">Период расчёта: <b>${x.evaluationDays} дней</b>. Качество данных описывает полноту входных данных и <b>не влияет на значение Индекса динамики.</b></small>
       </section>
 
       <section class="fscore-panel fscore-composition-panel">
@@ -2040,8 +2077,8 @@ function renderFScoreAnalytics(){
       </section>
 
       <section class="fscore-panel fscore-reasons-panel">
-        <div class="fscore-panel-title compact"><div><b>Что влияет сейчас</b><small>Все доступные факторы: тело, тренировки и питание</small></div></div>
-        <div class="fscore-reasons">${reasons||'<div class="fscore-empty">Пока недостаточно истории для объяснения.</div>'}</div>
+        <div class="fscore-panel-title compact"><div><b>Что влияет сейчас</b><small>Показываются только факторы, реально участвующие в расчёте</small></div></div>
+        <div class="fscore-reasons">${reasons||'<div class="fscore-empty">Пока недостаточно истории для объяснения.</div>'}</div><div class="fscore-status-reason"><b>${escapeHtml(x.status)}</b><span>${escapeHtml(x.statusReason)}</span></div>
       </section>
 
       <details class="fscore-panel fscore-method-panel">
@@ -2055,7 +2092,7 @@ function renderFScoreAnalytics(){
       <div class="fscore-method-formula"><b>Веса: вес · талия · остальные</b><div><span>Набор</span><strong>30% · 10% · 60%</strong></div><div><span>Сушка</span><strong>25% · 35% · 40%</strong></div><div><span>Поддержание</span><strong>35% · 25% · 40%</strong></div></div>
     </div></details>
     <details class="fscore-method-sub" open><summary>Тренировки</summary><div class="fscore-method-section">
-      <div class="fscore-method-item"><b>Системность — 50%</b><span>60% — попадание в целевую частоту, 40% — равномерность. Максимальный перерыв: ≤5 дн. = 100; ≤7 = 96; ≤10 = 88; ≤14 = 76; ≤21 = 58; ≤30 = 40; &gt;30 = 20. Текущий период: 80% + предыдущий 20%.</span></div>
+      <div class="fscore-method-item"><b>Системность — 50%</b><span>Основной период — ${x.evaluationDays} дней; для системности используется окно ${x.consistencyDays} дней. 60% — попадание в целевую частоту, 40% — равномерность. Максимальный перерыв: ≤5 дн. = 100; ≤7 = 96; ≤10 = 88; ≤14 = 76; ≤21 = 58; ≤30 = 40; &gt;30 = 20. Текущий период: 80% + предыдущий 20%.</span></div>
       <div class="fscore-method-item"><b>Рабочие веса — 25%</b><span>Рабочий результат силового упражнения: один вес, минимум 3 подхода и не менее 6 повторений в каждом. Сравнивается медиана первой и второй половины периода.</span></div>
       <div class="fscore-method-item"><b>Расчётный 1ПМ — 10%</b><span>Для 2–12 повторений: <code>1ПМ = вес × (1 + повторения / 30)</code>; при 1 повторении используется фактический вес. Сравниваются средние значения первой и второй половины.</span></div>
       <div class="fscore-method-item"><b>Объём — 15%</b><span><code>Объём = Σ(вес × повторения)</code>. Сравнивается средний объём первой и второй половины.</span></div>
@@ -2069,13 +2106,13 @@ function renderFScoreAnalytics(){
     </div></details>
     <details class="fscore-method-sub"><summary>Итог</summary><div class="fscore-method-section">
       <div class="fscore-method-formula"><b>Стандарт</b><div><strong>Тело 40% · Тренировки 30% · Питание 30%</strong></div></div>
-      <div class="fscore-method-item"><b>Своя цель</b><span>Веса блоков задаются пользователем и нормализуются до 100%.</span></div>
+      <div class="fscore-method-item"><b>Стандартная цель</b><span>Использует фиксированные веса: тело 40%, тренировки 30%, питание 30%.</span></div><div class="fscore-method-item"><b>Своя цель</b><span>Веса блоков задаются пользователем и всегда нормализуются ровно до 100%.</span></div>
       <div class="fscore-method-note"><b>Индекс = Σ(балл блока × вес) / Σ доступных весов.</b> Недостающие данные не считаются провалом.</div>
     </div></details>
     <details class="fscore-method-sub"><summary>Своя цель</summary><div class="fscore-method-section">
       <div class="fscore-method-item"><b>Рост / снижение</b><span>Фиксированная цель. До достижения оценивается движение к ней; после — буфер max(допуск, 0,5% цели). При превышении буфера оценка плавно снижается и ограничена диапазоном 55–100.</span></div>
       <div class="fscore-method-item"><b>Стабильно</b><span>70% — положение относительно цели + 30% — стабильность. Если сравнения двух половин нет, стабильность временно оценивается как 80.</span></div>
-      <div class="fscore-method-item"><b>Период</b><span>7–365 дней. Период системности тренировок задаётся отдельно.</span></div>
+      <div class="fscore-method-item"><b>Период</b><span>Главный период расчёта — ${x.evaluationDays} дней. Для системности может использоваться более короткое окно, но оно не выходит за пределы главного периода.</span></div>
     </div></details>
     <details class="fscore-method-sub"><summary>Достоверность</summary><div class="fscore-method-section">
       <div class="fscore-method-item"><b>Доверие</b><span>Отдельная оценка качества данных, не добавляется к Индексу.</span></div>

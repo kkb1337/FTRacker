@@ -5931,7 +5931,7 @@ body{min-height:100dvh;background:var(--bg);overflow-y:auto!important;}
   .unified-surface-header.ft-modal-header>.surface-title,
   .unified-surface-header.unified-surface-header-close>.surface-title{font-size:21px!important;}
 }
-<style id="ftracker-v1-5-5-close-row-finalization">
+/* ftracker-v1-5-5-close-row-finalization */
 /* Existing title elements moved into the header must not keep old viewport positioning. */
 .ft-modal-header .surface-title > .workout-detail-title-wrap,
 .ft-modal-header .surface-title > .replace-sheet-head,
@@ -13812,21 +13812,24 @@ html,body{
 
 /* v1.8.23 — Dynamic Index / workout-result consistency */
 .fscore-confidence-card{
-  display:grid!important;
-  grid-template-columns:minmax(0,1fr) auto auto!important;
-  align-items:center!important;
-  gap:9px!important;
+  display:block!important;
   margin:8px 0 12px!important;
-  padding:11px 14px!important;
+  padding:13px 14px!important;
   border:1px solid rgba(255,255,255,.09)!important;
   border-radius:16px!important;
   background:rgba(255,255,255,.028)!important;
 }
-.fscore-confidence-card>div{min-width:0!important;display:flex!important;flex-direction:column!important;gap:2px!important}
-.fscore-confidence-card b{font-size:13px!important}
-.fscore-confidence-card small{font-size:10px!important;color:var(--subtext)!important}
-.fscore-confidence-card strong{font-size:20px!important;line-height:1!important}
-.fscore-confidence-card>span{font-size:10px!important;font-weight:800!important;color:var(--subtext)!important;white-space:nowrap!important}
+.fscore-confidence-head{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important}
+.fscore-confidence-head>b{font-size:14px!important;line-height:1.2!important}
+.fscore-confidence-head>div{display:flex!important;align-items:baseline!important;gap:7px!important;flex-shrink:0!important}
+.fscore-confidence-head strong{font-size:20px!important;line-height:1!important}
+.fscore-confidence-head span{font-size:11px!important;font-weight:800!important;color:var(--subtext)!important;white-space:nowrap!important}
+.fscore-confidence-missing{margin-top:10px!important;padding-top:9px!important;border-top:1px solid rgba(255,255,255,.07)!important}
+.fscore-confidence-missing>b{font-size:11px!important;font-weight:800!important}
+.fscore-confidence-missing ol{margin:6px 0 0 18px!important;padding:0!important}
+.fscore-confidence-missing li{padding:2px 0!important;font-size:11px!important;line-height:1.35!important;color:var(--subtext)!important}
+.fscore-confidence-complete{margin-top:10px!important;padding-top:9px!important;border-top:1px solid rgba(255,255,255,.07)!important;font-size:11px!important;line-height:1.35!important;color:var(--subtext)!important}
+.fscore-confidence-note{display:block!important;margin-top:9px!important;font-size:10px!important;line-height:1.35!important;color:var(--subtext)!important}
 .fscore-block.is-empty .fscore-block-weight{opacity:.62!important}
 .workout-extra-set-label{
   margin:10px 0 6px!important;
@@ -13842,3 +13845,141 @@ html,body{
   .fscore-confidence-card{grid-template-columns:minmax(0,1fr) auto!important}
   .fscore-confidence-card>span{grid-column:1/-1!important;margin-top:-2px!important}
 }
+
+
+/* ========================================================================
+   FTracker v1.8.24 — VISUAL SYSTEM AUDIT / SAFE TYPOGRAPHY LAYER
+   ------------------------------------------------------------------------
+   This layer intentionally changes presentation only. It does not alter
+   window IDs, DOM structure, navigation, data, event handlers or scrolling
+   ownership. Existing layout contracts remain authoritative.
+   ======================================================================== */
+:root{
+  --ft-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --ft-font-size-xs:11px;
+  --ft-font-size-sm:13px;
+  --ft-font-size-body:15px;
+  --ft-font-size-control:16px;
+  --ft-font-size-card:17px;
+  --ft-font-size-title:22px;
+  --ft-font-size-screen:24px;
+  --ft-font-size-display:42px;
+  --ft-weight-regular:400;
+  --ft-weight-medium:500;
+  --ft-weight-semibold:600;
+  --ft-weight-bold:700;
+  --ft-weight-heavy:800;
+  --ft-line-tight:1.15;
+  --ft-line-normal:1.35;
+}
+
+html,body,#app,
+button,input,select,textarea,optgroup{
+  font-family:var(--ft-font-family)!important;
+  font-synthesis:none!important;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+/* Never let browser defaults create a second typography system. */
+button,input,select,textarea{letter-spacing:normal;}
+
+/* Main semantic text levels. */
+.subtitle{font-size:var(--ft-font-size-body)!important;font-weight:var(--ft-weight-medium)!important;line-height:var(--ft-line-normal)!important;}
+.small-btn{font-size:var(--ft-font-size-sm)!important;font-weight:var(--ft-weight-semibold)!important;line-height:1.2!important;}
+.tab,.stats-tab{font-size:var(--ft-font-size-sm)!important;font-weight:var(--ft-weight-semibold)!important;line-height:1.2!important;}
+
+/* One typography contract for ordinary screen headers. */
+#app>[id$="Screen"]>.screen-header>.title,
+#app>[id$="Screen"]>.screen-header>.section-title{
+  font-family:var(--ft-font-family)!important;
+  font-size:var(--ft-font-size-screen)!important;
+  font-weight:var(--ft-weight-heavy)!important;
+  line-height:var(--ft-line-tight)!important;
+  letter-spacing:-.01em!important;
+  font-synthesis:none!important;
+}
+
+/* One typography contract for secondary-window headers. */
+.unified-surface-header>.surface-title,
+.unified-surface-header>.chart-modal-title,
+.ft-modal-header>.surface-title{
+  font-family:var(--ft-font-family)!important;
+  font-size:var(--ft-font-size-title)!important;
+  font-weight:var(--ft-weight-heavy)!important;
+  line-height:var(--ft-line-tight)!important;
+  letter-spacing:-.01em!important;
+  font-synthesis:none!important;
+}
+
+/* Header controls use the same visual weight everywhere. */
+.screen-header>button:first-child,
+.unified-surface-header>.surface-back-btn,
+.unified-surface-header>.surface-close-btn,
+.unified-surface-header>.ft-header-close-control{
+  font-family:var(--ft-font-family)!important;
+  font-size:var(--ft-font-size-sm)!important;
+  font-weight:var(--ft-weight-bold)!important;
+  line-height:1.15!important;
+  font-synthesis:none!important;
+}
+
+/* Common controls: stable text metrics, without changing geometry. */
+button{font-family:var(--ft-font-family)!important;font-synthesis:none!important;}
+input,select,textarea{
+  font-family:var(--ft-font-family)!important;
+  font-size:var(--ft-font-size-control)!important;
+  line-height:1.2!important;
+  font-synthesis:none!important;
+}
+
+/* Card-level labels/body copy: only normalize typography, not dimensions. */
+#app .card label,
+#app .card .field-label,
+#app .card .input-label,
+#app .card .form-label{
+  font-family:var(--ft-font-family)!important;
+  font-size:var(--ft-font-size-sm)!important;
+  font-weight:var(--ft-weight-semibold)!important;
+  line-height:var(--ft-line-normal)!important;
+}
+
+/* Repeated list/meta text. */
+.history-item,.food-item,.progress-item,.measurement-item,
+.food-preset-item,.catalog-modal-list button,
+.measurement-field-row,.measurement-manager-row-name{
+  font-family:var(--ft-font-family)!important;
+  line-height:var(--ft-line-normal)!important;
+}
+
+/* Numeric emphasis remains deliberately distinct from body copy. */
+.big-number{font-family:var(--ft-font-family)!important;font-synthesis:none!important;}
+
+/* Prevent accidental synthetic bold/italic from changing the perceived face. */
+strong,b{font-synthesis:none!important;}
+
+/* Compact screens: only scale header titles one step, never individual legacy
+   selectors. This is the sole responsive typography exception. */
+@media(max-width:430px){
+  #app>[id$="Screen"]>.screen-header>.title,
+  #app>[id$="Screen"]>.screen-header>.section-title{font-size:22px!important;}
+  .unified-surface-header>.surface-title,
+  .unified-surface-header>.chart-modal-title,
+  .ft-modal-header>.surface-title{font-size:21px!important;}
+}
+
+/* Keep the existing safe-area/window architecture intact; this audit layer
+   deliberately does not introduce a second inset or viewport height rule. */
+
+/* v1.8.27 — Dynamic Index clarity layer */
+.fscore-quality-breakdown{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;margin-top:11px!important}
+.fscore-quality-breakdown>div{min-width:0!important;padding:8px 9px!important;border:1px solid rgba(255,255,255,.07)!important;border-radius:11px!important;background:rgba(255,255,255,.018)!important}
+.fscore-quality-breakdown span,.fscore-quality-breakdown small{display:block!important;color:var(--subtext)!important;font-size:10px!important;line-height:1.2!important}
+.fscore-quality-breakdown b{display:inline-block!important;margin-top:3px!important;font-size:14px!important;line-height:1.1!important}
+.fscore-quality-breakdown small{display:inline-block!important;margin-left:4px!important}
+.fscore-confidence-actions{display:flex!important;flex-wrap:wrap!important;gap:7px!important;margin-top:9px!important}
+.fscore-confidence-actions .fscore-secondary-btn{width:auto!important;min-height:34px!important;padding:7px 10px!important;font-size:11px!important}
+.fscore-status-reason{display:flex!important;flex-direction:column!important;gap:3px!important;margin-top:10px!important;padding:9px 10px!important;border-radius:11px!important;background:rgba(255,255,255,.025)!important}
+.fscore-status-reason b{font-size:11px!important;line-height:1.25!important}
+.fscore-status-reason span{font-size:11px!important;line-height:1.35!important;color:var(--subtext)!important}
+@media(max-width:380px){.fscore-quality-breakdown{gap:5px!important}.fscore-quality-breakdown>div{padding:7px 6px!important}.fscore-quality-breakdown small{display:block!important;margin-left:0!important;margin-top:2px!important}}
