@@ -1,4 +1,4 @@
-/* FTracker v1.8.29 — single application runtime.
+/* FTracker v1.8.30 — Dynamic Index audit corrections.
    Consolidated from the audited inline runtimes without changing their order. */
 
 /* ===== CONSOLIDATED RUNTIME BLOCK 1 ===== */
@@ -872,7 +872,7 @@ function createFScoreCustomDraft(){
     const latest=(key)=>{const a=(data.measurements||[]).filter(m=>Number(m[key])>0).sort((x,y)=>String(x.date).localeCompare(String(y.date)));return a.length?Number(a[a.length-1][key]):null;};
     const targets={};
     fields.forEach(f=>{const v=latest(f.key);targets[f.key]={direction:'maintain',target:'',tolerance:1,enabled:true};});
-    return {id:makeFScoreCustomId(),name:'',mode:'maintain',evaluationDays:90,targets,training:{target:3,period:'30',weights:{systemity:45,strength:35,volume:20}},nutrition:{auto:true,calories:0,protein:0,fat:0,carbs:0,toleranceCalories:10,toleranceProtein:10,toleranceFat:10,toleranceCarbs:10},blockWeights:{body:40,training:30,nutrition:30},__draft:true};
+    return {id:makeFScoreCustomId(),name:'',mode:'maintain',evaluationDays:90,createdAt:null,targets,training:{target:3,period:'30',weights:{systemity:45,strength:35,volume:20}},nutrition:{auto:true,calories:0,protein:0,fat:0,carbs:0,toleranceCalories:10,toleranceProtein:10,toleranceFat:10,toleranceCarbs:10},blockWeights:{body:40,training:30,nutrition:30},__draft:true};
 }
 function getFScoreCustomGoals(){
     const fields=(typeof getMeasurementFields==='function'?getMeasurementFields():[]);
@@ -898,7 +898,7 @@ function getFScoreCustomGoals(){
             const nums={body:Number(bw.body),training:Number(bw.training),nutrition:Number(bw.nutrition)};
             const valid=Object.values(nums).every(Number.isFinite)&&Object.values(nums).every(v=>v>=0)&&Object.values(nums).some(v=>v>0); const bwSum=Object.values(nums).reduce((a,b)=>a+b,0)||100; const normBW=valid?{body:Math.round(nums.body/bwSum*100),training:Math.round(nums.training/bwSum*100),nutrition:Math.round(nums.nutrition/bwSum*100)}:{body:40,training:30,nutrition:30}; normBW.nutrition+=100-(normBW.body+normBW.training+normBW.nutrition);
             const tr=c.training&&typeof c.training==='object'?c.training:{}; const tw=tr.weights&&typeof tr.weights==='object'?tr.weights:{}; const legacyTarget=Number(tr.target); const trainingPeriod=Math.max(7,Math.min(365,Number(tr.period)||30)); const weeklyTarget=legacyTarget>7?legacyTarget*7/trainingPeriod:(Number.isFinite(legacyTarget)&&legacyTarget>0?legacyTarget:3); const rawTW={systemity:Number(tw.systemity),strength:Number(tw.strength),volume:Number(tw.volume)}; const legacyStrength=(!Number.isFinite(rawTW.strength)&&Number.isFinite(Number(tw.working)))?Number(tw.working)+Number(tw.e1rm||0):rawTW.strength; const validTW=[rawTW.systemity,legacyStrength,rawTW.volume].every(Number.isFinite)&&[rawTW.systemity,legacyStrength,rawTW.volume].every(v=>v>=0)&&[rawTW.systemity,legacyStrength,rawTW.volume].some(v=>v>0); const normBase=validTW?{systemity:rawTW.systemity,strength:legacyStrength,volume:rawTW.volume}:{systemity:45,strength:35,volume:20}; const twSum=Object.values(normBase).reduce((a,b)=>a+b,0)||100; const normTW={systemity:Math.round(normBase.systemity/twSum*100),strength:Math.round(normBase.strength/twSum*100),volume:Math.round(normBase.volume/twSum*100)}; normTW.volume+=(100-Object.values(normTW).reduce((a,b)=>a+b,0)); const nu=c.nutrition&&typeof c.nutrition==='object'?c.nutrition:{};
-            return {id:String(c.id||('cg_legacy_'+i)),name:String(c.name||'').trim().slice(0,40),mode:['gain','cut','maintain'].includes(c.mode)?c.mode:'maintain',evaluationDays:Math.max(7,Math.min(365,Number(c.evaluationDays)||90)),targets,training:{target:Math.max(1,Math.min(7,weeklyTarget)),period:String(trainingPeriod),weights:normTW},nutrition:{auto:nu.auto!==false,calories:Math.max(0,Number(nu.calories)||0),protein:Math.max(0,Number(nu.protein)||0),fat:Math.max(0,Number(nu.fat)||0),carbs:Math.max(0,Number(nu.carbs)||0),toleranceCalories:Math.max(0,Number.isFinite(Number(nu.toleranceCalories))?Number(nu.toleranceCalories):10),toleranceProtein:Math.max(0,Number.isFinite(Number(nu.toleranceProtein))?Number(nu.toleranceProtein):10),toleranceFat:Math.max(0,Number.isFinite(Number(nu.toleranceFat))?Number(nu.toleranceFat):10),toleranceCarbs:Math.max(0,Number.isFinite(Number(nu.toleranceCarbs))?Number(nu.toleranceCarbs):10)},blockWeights:normBW};
+            return {id:String(c.id||('cg_legacy_'+i)),name:String(c.name||'').trim().slice(0,40),mode:['gain','cut','maintain'].includes(c.mode)?c.mode:'maintain',evaluationDays:Math.max(7,Math.min(365,Number(c.evaluationDays)||90)),createdAt:Number(c.createdAt)>0?Number(c.createdAt):null,targets,training:{target:Math.max(1,Math.min(7,weeklyTarget)),period:String(trainingPeriod),weights:normTW},nutrition:{auto:nu.auto!==false,calories:Math.max(0,Number(nu.calories)||0),protein:Math.max(0,Number(nu.protein)||0),fat:Math.max(0,Number(nu.fat)||0),carbs:Math.max(0,Number(nu.carbs)||0),toleranceCalories:Math.max(0,Number.isFinite(Number(nu.toleranceCalories))?Number(nu.toleranceCalories):10),toleranceProtein:Math.max(0,Number.isFinite(Number(nu.toleranceProtein))?Number(nu.toleranceProtein):10),toleranceFat:Math.max(0,Number.isFinite(Number(nu.toleranceFat))?Number(nu.toleranceFat):10),toleranceCarbs:Math.max(0,Number.isFinite(Number(nu.toleranceCarbs))?Number(nu.toleranceCarbs):10)},blockWeights:normBW};
         }).filter(c=>c.name);
         // Удаляем старую автоматически созданную заглушку «Моя цель», если существует хотя бы одна реально сохранённая пользовательская цель.
         // Это миграция старого UX: новая пустая цель больше никогда не создаётся автоматически.
@@ -923,7 +923,7 @@ function persistFScoreCustomGoals(list){
 function saveFScoreCustomConfig(cfg, existingId=null){
     const list=getFScoreCustomGoals();
     const cleanName=String(cfg.name||'').trim().slice(0,40); if(!cleanName){showToast('Введите название цели');return false;}
-    const clean={id:existingId||cfg.id||makeFScoreCustomId(),name:cleanName,mode:['gain','cut','maintain'].includes(cfg.mode)?cfg.mode:'maintain',evaluationDays:Math.max(7,Math.min(365,Number(cfg.evaluationDays)||90)),targets:cfg.targets&&typeof cfg.targets==='object'?cfg.targets:{},training:(()=>{const tr=cfg.training&&typeof cfg.training==='object'?cfg.training:{}; const w=tr.weights&&typeof tr.weights==='object'?tr.weights:{}; const period=Math.max(7,Math.min(365,Number(tr.period)||30)); const rawTarget=Number(tr.target); const target=rawTarget>7?rawTarget*7/period:(Number.isFinite(rawTarget)&&rawTarget>0?rawTarget:3); const legacyStrength=Number.isFinite(Number(w.strength))?Number(w.strength):Number(w.working||0)+Number(w.e1rm||0); const raw={systemity:Number(w.systemity),strength:legacyStrength,volume:Number(w.volume)}; const vals=Object.values(raw).every(Number.isFinite)&&Object.values(raw).every(v=>v>=0)&&Object.values(raw).some(v=>v>0)?raw:{systemity:45,strength:35,volume:20}; const sum=Object.values(vals).reduce((a,b)=>a+b,0)||100; const nw={systemity:Math.round(vals.systemity/sum*100),strength:Math.round(vals.strength/sum*100),volume:Math.round(vals.volume/sum*100)}; nw.volume+=(100-Object.values(nw).reduce((a,b)=>a+b,0)); return {target:Math.max(1,Math.min(7,target)),period:String(period),weights:nw};})(),nutrition:{auto:cfg.nutrition?.auto!==false,calories:Math.max(0,Number(cfg.nutrition?.calories)||0),protein:Math.max(0,Number(cfg.nutrition?.protein)||0),fat:Math.max(0,Number(cfg.nutrition?.fat)||0),carbs:Math.max(0,Number(cfg.nutrition?.carbs)||0),toleranceCalories:Math.max(0,Number(cfg.nutrition?.toleranceCalories)||100),toleranceProtein:Math.max(0,Number(cfg.nutrition?.toleranceProtein)||10),toleranceFat:Math.max(0,Number(cfg.nutrition?.toleranceFat)||10),toleranceCarbs:Math.max(0,Number(cfg.nutrition?.toleranceCarbs)||15)},blockWeights:cfg.blockWeights||{body:40,training:30,nutrition:30}};
+    const existing=list.find(x=>x.id=== (existingId||cfg.id)); const createdAt=Number(existing?.createdAt)>0?Number(existing.createdAt):(Number(cfg.createdAt)>0?Number(cfg.createdAt):Date.now()); const clean={id:existingId||cfg.id||makeFScoreCustomId(),name:cleanName,mode:['gain','cut','maintain'].includes(cfg.mode)?cfg.mode:'maintain',evaluationDays:Math.max(7,Math.min(365,Number(cfg.evaluationDays)||90)),createdAt,targets:cfg.targets&&typeof cfg.targets==='object'?cfg.targets:{},training:(()=>{const tr=cfg.training&&typeof cfg.training==='object'?cfg.training:{}; const w=tr.weights&&typeof tr.weights==='object'?tr.weights:{}; const period=Math.max(7,Math.min(365,Number(tr.period)||30)); const rawTarget=Number(tr.target); const target=rawTarget>7?rawTarget*7/period:(Number.isFinite(rawTarget)&&rawTarget>0?rawTarget:3); const legacyStrength=Number.isFinite(Number(w.strength))?Number(w.strength):Number(w.working||0)+Number(w.e1rm||0); const raw={systemity:Number(w.systemity),strength:legacyStrength,volume:Number(w.volume)}; const vals=Object.values(raw).every(Number.isFinite)&&Object.values(raw).every(v=>v>=0)&&Object.values(raw).some(v=>v>0)?raw:{systemity:45,strength:35,volume:20}; const sum=Object.values(vals).reduce((a,b)=>a+b,0)||100; const nw={systemity:Math.round(vals.systemity/sum*100),strength:Math.round(vals.strength/sum*100),volume:Math.round(vals.volume/sum*100)}; nw.volume+=(100-Object.values(nw).reduce((a,b)=>a+b,0)); return {target:Math.max(1,Math.min(7,target)),period:String(period),weights:nw};})(),nutrition:{auto:cfg.nutrition?.auto!==false,calories:Math.max(0,Number(cfg.nutrition?.calories)||0),protein:Math.max(0,Number(cfg.nutrition?.protein)||0),fat:Math.max(0,Number(cfg.nutrition?.fat)||0),carbs:Math.max(0,Number(cfg.nutrition?.carbs)||0),toleranceCalories:Math.max(0,Number(cfg.nutrition?.toleranceCalories)||100),toleranceProtein:Math.max(0,Number(cfg.nutrition?.toleranceProtein)||10),toleranceFat:Math.max(0,Number(cfg.nutrition?.toleranceFat)||10),toleranceCarbs:Math.max(0,Number(cfg.nutrition?.toleranceCarbs)||15)},blockWeights:cfg.blockWeights||{body:40,training:30,nutrition:30}};
     const rawBlockWeights={body:Number(clean.blockWeights?.body)||0,training:Number(clean.blockWeights?.training)||0,nutrition:Number(clean.blockWeights?.nutrition)||0};
     const sum=Object.values(rawBlockWeights).reduce((a,b)=>a+b,0)||1;
     clean.blockWeights=Object.fromEntries(Object.entries(rawBlockWeights).map(([k,v])=>[k,Math.round(v/sum*100)]));
@@ -1275,10 +1275,10 @@ function saveFScoreCustomFromUI(){
     closeModalElement(document.getElementById('fscoreCustomGoalModal'));
     showToast('Своя цель сохранена');
 }
-function fScoreCustomBody(cfg){
+function fScoreCustomBody(cfg,startAt=null){
     const targets=cfg?.targets||{}, parts=[], details=[];
     const periodDays=Math.max(7,Math.min(365,Number(cfg?.evaluationDays)||90));
-    const now=Date.now(), start=now-periodDays*86400000, mid=now-Math.ceil(periodDays/2)*86400000;
+    const now=Date.now(), start=Math.max(now-periodDays*86400000,Number(startAt)||0), mid=Math.max(now-Math.ceil(periodDays/2)*86400000, start);
     const avg=(a)=>a.length?a.reduce((z,x)=>z+x.value,0)/a.length:null;
     Object.entries(targets).forEach(([key,t])=>{
         if(t?.enabled===false)return;
@@ -1334,7 +1334,8 @@ function fScoreCustomBody(cfg){
         details.push({key,score,current,previous:previousValue,periodChange:change,target,direction,tolerance,progress,days:periodDays,status,count:series.length,comparison:hasComparison});
     });
     if(!parts.length)return {score:null,available:false,parts:[],details:[],periodDays};
-    return {score:parts.reduce((a,b)=>a+b,0)/parts.length,available:true,parts,details,periodDays};
+    const aggregate=parts.reduce((a,b)=>a+b,0)/parts.length;
+    return {score:fScoreClamp(aggregate),available:true,parts,details,periodDays};
 }
 function setFScoreGoal(goal){
     if(!['cut','gain','maintain','custom'].includes(goal)) return;
@@ -1379,6 +1380,15 @@ function setFScoreGoal(goal){
     }
     showToast(`Цель «${getGoalNutritionLabel(goal)}»: лимиты КБЖУ пересчитаны`);
 }
+
+function fScoreAllTimeDays(){
+    const dates=[];
+    (data.history||[]).forEach(e=>{const t=new Date(e?.date).getTime();if(Number.isFinite(t))dates.push(t);});
+    (data.measurements||[]).forEach(e=>{const t=new Date(e?.date).getTime();if(Number.isFinite(t))dates.push(t);});
+    (data.foodDiary?.entries||[]).forEach(e=>{const t=new Date(String(e?.date||'')+'T12:00:00').getTime();if(Number.isFinite(t))dates.push(t);});
+    const first=dates.length?Math.min(...dates):Date.now();
+    return Math.max(7,Math.ceil((Date.now()-first)/86400000)+1);
+}
 function fScoreClamp(v,min=0,max=100){
     v=Number(v);
     if(!Number.isFinite(v)) return null;
@@ -1387,9 +1397,9 @@ function fScoreClamp(v,min=0,max=100){
     if(min>max){const t=min;min=max;max=t;}
     return Math.max(min,Math.min(max,v));
 }
-function fScoreRecent(history,daysStart,daysEnd=0){
-    const now=Date.now(),lo=now-daysStart*86400000,hi=daysEnd?now-daysEnd*86400000:now;
-    return history.filter(e=>{const t=new Date(e.date).getTime();return Number.isFinite(t)&&t>=lo&&t<hi;});
+function fScoreRecent(history,daysStart,daysEnd=0,startAt=null){
+    const now=Date.now(),lo=Math.max(now-daysStart*86400000,Number(startAt)||0),hi=daysEnd?now-daysEnd*86400000:now;
+    return history.filter(e=>{const t=new Date(e.date).getTime();return Number.isFinite(t)&&t>=lo&&t<hi&&(!startAt||t>=Number(startAt));});
 }
 function fScorePct(a,b){a=Number(a);b=Number(b);return Number.isFinite(a)&&Number.isFinite(b)&&a!==0?(b-a)/Math.abs(a)*100:null;}
 function fScoreDates(rows){return rows.map(x=>new Date(x.date).getTime()).filter(Number.isFinite).sort((a,b)=>a-b);}
@@ -1412,14 +1422,15 @@ function fScoreDistribution(history){
     return {score,maxGap};
 }
 function fScoreTrainingConsistency(recent,previous,periodDays=90){
-    if(!recent.length)return {score:null,frequency:null,distribution:null,count:0};
+    if(!recent.length)return {score:null,frequency:null,distribution:null,count:0,periodDays,previousWindowDays:periodDays};
     const frequency=fScoreFrequency(recent.length,periodDays);
     const distribution=fScoreDistribution(recent);
-    // Historical smoothing protects a normally systematic user from one bad month.
+    // The previous window is exactly the immediately preceding window of the
+    // same length. This remains true when the custom evaluation period changes.
     const prevFreq=previous.length?fScoreFrequency(previous.length,periodDays):null;
     let current=.60*frequency+.40*(distribution?distribution.score:65);
     if(prevFreq!=null) current=.80*current+.20*prevFreq;
-    return {score:fScoreClamp(current),frequency,distribution,count:recent.length};
+    return {score:fScoreClamp(current),frequency,distribution,count:recent.length,periodDays,previousWindowDays:periodDays};
 }
 function fScoreMeasurementSeries(key){
     return (data.measurements||[]).map(m=>({date:new Date(m.date).getTime(),value:Number(m[key])})).filter(x=>Number.isFinite(x.date)&&Number.isFinite(x.value)&&x.value>0).sort((a,b)=>a.date-b.date);
@@ -1439,10 +1450,10 @@ function fScoreEMA(arr,period){
     const alpha=2/(period+1);let ema=arr[0].value;
     return arr.map((x,i)=>{if(i)ema=alpha*x.value+(1-alpha)*ema;return {...x,ema};});
 }
-function fScoreMeasurementTrend(key,periodDays=90){
+function fScoreMeasurementTrend(key,periodDays=90,startAt=null){
     const all=fScoreConfirmedSeries(key);
-    const cutoff=Date.now()-Math.max(14,Number(periodDays)||90)*86400000;
-    const raw=all.filter(x=>x.date>=cutoff);
+    const cutoff=Math.max(Date.now()-Math.max(14,Number(periodDays)||90)*86400000,Number(startAt)||0);
+    const raw=all.filter(x=>x.date>=cutoff&&(!startAt||x.date>=Number(startAt)));
     if(raw.length<2)return null;
     const sorted=raw.slice().sort((a,b)=>a.date-b.date);
     const median=arr=>{const v=arr.filter(Number.isFinite).sort((a,b)=>a-b);if(!v.length)return null;const m=Math.floor(v.length/2);return v.length%2?v[m]:(v[m-1]+v[m])/2;};
@@ -1487,9 +1498,9 @@ function fScoreRateScore(goal,speed){
     }
     return a<=.3?100:a<=.5?fScoreClamp(100-(a-.3)*60):a<=1?fScoreClamp(88-(a-.5)*70):fScoreClamp(53-(a-1)*30);
 }
-function fScoreOtherMeasurements(goal,periodDays=90){
+function fScoreOtherMeasurements(goal,periodDays=90,startAt=null){
     const fields=getMeasurementFields().filter(f=>!['weight','waist'].includes(f.key));
-    const vals=fields.map(f=>fScoreMeasurementTrend(f.key,periodDays)).filter(Boolean);
+    const vals=fields.map(f=>fScoreMeasurementTrend(f.key,periodDays,startAt)).filter(Boolean);
     if(!vals.length)return null;
     const scores=vals.map(t=>{
         const c=t.change;
@@ -1504,8 +1515,8 @@ function fScoreOtherMeasurements(goal,periodDays=90){
     const avg=scores.reduce((a,b)=>a+b,0)/scores.length;
     return {score:avg,losses,count:vals.length,vals};
 }
-function fScoreBody(goal,periodDays=90){
-    const weight=fScoreMeasurementTrend('weight',periodDays),waist=fScoreMeasurementTrend('waist',periodDays),otherData=fScoreOtherMeasurements(goal,periodDays),other=otherData?otherData.score:null;
+function fScoreBody(goal,periodDays=90,startAt=null){
+    const weight=fScoreMeasurementTrend('weight',periodDays,startAt),waist=fScoreMeasurementTrend('waist',periodDays,startAt),otherData=fScoreOtherMeasurements(goal,periodDays,startAt),other=otherData?otherData.score:null;
     const configured=goal==='gain'?{weight:30,waist:10,other:60}:goal==='cut'?{weight:25,waist:35,other:40}:{weight:35,waist:25,other:40};
     const parts=[];
     if(weight)parts.push({score:fScoreRateScore(goal,weight.speed),weight:configured.weight,name:'Вес'});
@@ -1531,8 +1542,8 @@ function fScoreBody(goal,periodDays=90){
     const score=parts.reduce((a,p)=>a+p.score*p.weight,0)/total;
     return {score:fScoreClamp(score),available:true,weight,waist,other,otherData};
 }
-function fScoreWorkingWeightTrend(history,periodDays=90,goal='maintain'){
-    const now=Date.now(),days=Math.max(7,Number(periodDays)||90),start=now-days*86400000,mid=now-Math.ceil(days/2)*86400000,by={};
+function fScoreWorkingWeightTrend(history,periodDays=90,goal='maintain',startAt=null){
+    const now=Date.now(),days=Math.max(7,Number(periodDays)||90),start=Math.max(now-days*86400000,Number(startAt)||0),mid=now-Math.ceil(days/2)*86400000,by={};
     // Working weight is deliberately NOT the heaviest set of a workout.
     // Use the canonical working-result rule: same weight, at least 3 sets,
     // and at least 6 reps per set. This keeps the signal about regular work
@@ -1598,11 +1609,11 @@ function fScoreTrainingConsistencyCustom(recent,previous,target,periodDays=30){
     if(!recent.length)return {score:null,frequency:null,distribution:null,count:0};
     const frequency=fScoreFrequencyCustom(recent.length,target,periodDays),distribution=fScoreDistribution(recent),prevFreq=previous.length?fScoreFrequencyCustom(previous.length,target,periodDays):null;
     let current=.60*frequency+.40*(distribution?distribution.score:65); if(prevFreq!=null)current=.80*current+.20*prevFreq;
-    return {score:fScoreClamp(current),frequency,distribution,count:recent.length,target};
+    return {score:fScoreClamp(current),frequency,distribution,count:recent.length,target,periodDays,previousWindowDays:periodDays};
 }
 function fScoreMedian(values){const a=values.map(Number).filter(Number.isFinite).sort((x,y)=>x-y);if(!a.length)return null;const m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2;}
-function fScorePerformanceSignals(history, periodDays=90){
-    const days=Math.max(7,Number(periodDays)||90), now=Date.now(), cutoff=now-days*86400000;
+function fScorePerformanceSignals(history, periodDays=90,startAt=null){
+    const days=Math.max(7,Number(periodDays)||90), now=Date.now(), cutoff=Math.max(now-days*86400000,Number(startAt)||0);
     const byExercise={};
     (history||[]).forEach(entry=>{
         const t=new Date(entry?.date).getTime();
@@ -1695,12 +1706,12 @@ function renderFScoreCustomEditorMarkup(){
       <div class="fscore-goal-editor-actions"><button type="button" class="fscore-custom-save" onclick="saveFScoreCustomFromUI()">Сохранить цель</button>${c.id?`<button type="button" class="fscore-custom-delete-goal" onclick="deleteFScoreCustomGoal('${escapeHtml(c.id)}')">Удалить цель</button>`:''}</div>
     </div>`;
 }
-function fScoreTraining(recent,prev,history,goal,customCfg=null){
+function fScoreTraining(recent,prev,history,goal,customCfg=null,startAt=null){
     const periodDays=customCfg?Math.max(7,Number(customCfg.evaluationDays)||90):90;
     const consistencyDays=customCfg?Math.min(periodDays,Math.max(7,Number(customCfg.training?.period)||30)):Math.min(periodDays,30);
     const consistency=customCfg?.training?.target?fScoreTrainingConsistencyCustom(recent,prev,Number(customCfg.training.target)||3,consistencyDays):fScoreTrainingConsistency(recent,prev,consistencyDays);
-    const working=fScoreWorkingWeightTrend(history,periodDays,goal);
-    const performance=fScorePerformanceSignals(history,periodDays);
+    const working=fScoreWorkingWeightTrend(history,periodDays,goal,startAt);
+    const performance=fScorePerformanceSignals(history,periodDays,startAt);
     const e1rmScore=performance.available?fScorePerformanceGoalScore(goal,performance.e1rm):null;
     const workingScore=working.available?working.score:null;
     const strengthScore=Number.isFinite(e1rmScore)&&Number.isFinite(workingScore)?(e1rmScore*.7+workingScore*.3):(Number.isFinite(e1rmScore)?e1rmScore:workingScore);
@@ -1713,22 +1724,28 @@ function fScoreTraining(recent,prev,history,goal,customCfg=null){
     ].filter(p=>Number.isFinite(p.score)&&p.weight>0);
     if(!parts.length)return {score:null,available:false,consistency,working,performance,periodDays,consistencyDays,parts:[]};
     const tw=parts.reduce((a,p)=>a+p.weight,0);
-    return {score:parts.reduce((a,p)=>a+p.score*p.weight,0)/tw,available:true,consistency,working,performance,strengthScore,periodDays,consistencyDays,parts};
+    const aggregate=parts.reduce((a,p)=>a+p.score*p.weight,0)/tw;
+    return {score:fScoreClamp(aggregate),available:true,consistency,working,performance,strengthScore:fScoreClamp(strengthScore),periodDays,consistencyDays,parts};
 }
-function fScoreNutrition(goal, customCfg=null, periodDays=90){
+function fScoreNutrition(goal, customCfg=null, periodDays=90,startAt=null){
     const entries=(data.foodDiary?.entries||[]).filter(e=>e&&e.date);
-    const daysLimit=Math.max(7,Math.min(365,Number(periodDays)||90));
+    const daysLimit=Math.max(7,Math.min(3650,Number(periodDays)||90));
     if(!entries.length) return {score:null,available:false,days:0,periodDays:daysLimit,coverage:0};
     const now=Date.now(),by={};
     entries.forEach(e=>{
         const date=String(e.date||''),t=new Date(date+'T12:00:00').getTime();
-        const cutoff=now-daysLimit*86400000;
+        const cutoff=Math.max(now-daysLimit*86400000,Number(startAt)||0);
         if(!date||!Number.isFinite(t)||t<cutoff||t>now)return;
         const x=by[date]||(by[date]={cal:0,protein:0,fat:0,carbs:0});
         x.cal+=Number(e.calories)||0;x.protein+=Number(e.protein)||0;x.fat+=Number(e.fat)||0;x.carbs+=Number(e.carbs)||0;
     });
     const days=Object.entries(by).map(([date,v])=>({date,...v}));
-    if(days.length<2)return {score:null,available:false,days:days.length,periodDays:daysLimit,coverage:days.length/daysLimit};
+    // Fewer than 3 fully logged days is not enough to make nutrition an
+    // active Index block. Crucially, sparse data is not pulled toward 50: once
+    // the minimum is reached, the score reflects the actual logged days only.
+    // This avoids the perverse incentive where logging a bad day is worse than
+    // leaving that day unlogged. Coverage remains a confidence/UX signal.
+    if(days.length<3)return {score:null,available:false,days:days.length,periodDays:daysLimit,coverage:days.length/daysLimit};
     const calScores=[],proteinScores=[],macroScores=[];
     days.forEach(d=>{
         let lim=getEffectiveFoodLimit(d.date)||{};
@@ -1749,33 +1766,38 @@ function fScoreNutrition(goal, customCfg=null, periodDays=90){
     if(!baseParts.length)return {score:null,available:false,days:days.length,periodDays:daysLimit,coverage:days.length/daysLimit,reason:'Нет целевых КБЖУ для выбранного периода'};
     const total=baseParts.reduce((a,p)=>a+p.weight,0);
     const rawScore=baseParts.reduce((a,p)=>a+p.score*p.weight,0)/total;
-    // Missing diary days are not treated as bad nutrition. With sparse data,
-    // the score is pulled toward neutral until there is enough coverage.
+    const score=fScoreClamp(rawScore);
+    // Missing diary days are not treated as bad nutrition. The Index uses only
+    // logged days after the 3-day minimum; coverage is reported separately as
+    // data quality and does not alter the numeric nutrition score.
     const coverage=Math.min(1,days.length/Math.min(14,daysLimit));
-    const score=50+(rawScore-50)*coverage;
-    return {score,rawScore,available:true,days:days.length,cal,protein,macros,goal,periodDays:daysLimit,coverage:Math.min(1,days.length/daysLimit),confidenceCoverage:coverage,manual:customCfg?.nutrition?.auto===false};
+    return {score,rawScore:score,available:true,days:days.length,cal,protein,macros,goal,periodDays:daysLimit,coverage:Math.min(1,days.length/daysLimit),confidenceCoverage:coverage,manual:customCfg?.nutrition?.auto===false};
 }
 function fScoreData(){
     const h=(data.history||[]).filter(e=>e&&e.date).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
     const goal=getFScoreGoal(),custom=goal==='custom'?getFScoreCustomConfig():null;
-    const evaluationDays=custom?Math.max(7,Math.min(365,Number(custom.evaluationDays)||90)):90;
+    const evaluationDays=custom?Math.max(7,Math.min(365,Number(custom.evaluationDays)||90)):fScoreAllTimeDays();
+    const customStartAt=custom&&Number(custom.createdAt)>0?Number(custom.createdAt):null;
+    // A user-created goal starts its own clock at creation. The selected evaluation
+    // period remains the maximum window, but it can never reach back before the goal existed.
+    // Legacy custom goals without createdAt retain the previous rolling-window behavior.
     // The evaluation period is the single public calculation window. A custom
     // training consistency window may be shorter, but never extends beyond it.
-    const consistencyDays=custom?Math.min(evaluationDays,Math.max(7,Number(custom.training?.period)||30)):Math.min(evaluationDays,30);
-    const recent=fScoreRecent(h,consistencyDays),prev=fScoreRecent(h,consistencyDays*2,consistencyDays),engineGoal=custom?.mode||goal;
-    const body=custom?fScoreCustomBody(custom):fScoreBody(engineGoal,evaluationDays);
-    const training=fScoreTraining(recent,prev,h,engineGoal,custom);
-    const nutrition=fScoreNutrition(engineGoal,custom,evaluationDays);
+    const consistencyDays=custom?Math.min(evaluationDays,Math.max(7,Number(custom.training?.period)||30)):evaluationDays;
+    const recent=fScoreRecent(h,consistencyDays,0,customStartAt),prev=fScoreRecent(h,consistencyDays*2,consistencyDays,customStartAt),engineGoal=custom?.mode||goal;
+    const body=custom?fScoreCustomBody(custom,customStartAt):fScoreBody(engineGoal,evaluationDays);
+    const training=fScoreTraining(recent,prev,h,engineGoal,custom,customStartAt);
+    const nutrition=fScoreNutrition(engineGoal,custom,evaluationDays,customStartAt);
     // Standard goals always have a stable 40/30/30 model. Custom goals may
     // choose their own weights, but the values are normalized on save.
     const weights=custom?.blockWeights?{body:Number(custom.blockWeights.body)||0,training:Number(custom.blockWeights.training)||0,nutrition:Number(custom.blockWeights.nutrition)||0}:{body:40,training:30,nutrition:30};
     const blockSources={body,training,nutrition};
-    const blocks=['body','training','nutrition'].map(key=>({key,name:key==='body'?'Тело':key==='training'?'Тренировки':'Питание',score:Number.isFinite(blockSources[key]?.score)?blockSources[key].score:null,weight:weights[key],available:!!blockSources[key]?.available}));
+    const blocks=['body','training','nutrition'].map(key=>({key,name:key==='body'?'Тело':key==='training'?'Тренировки':'Питание',score:Number.isFinite(blockSources[key]?.score)?fScoreClamp(blockSources[key].score):null,weight:weights[key],available:!!blockSources[key]?.available}));
     const available=blocks.filter(x=>Number.isFinite(x.score)&&x.weight>0);
     const totalWeight=available.reduce((a,b)=>a+b.weight,0);
     const score=totalWeight?Math.round(available.reduce((a,b)=>a+b.score*b.weight,0)/totalWeight):0;
     const now=Date.now();
-    const evaluationCutoff=now-Math.max(7,Number(evaluationDays)||90)*86400000;
+    const evaluationCutoff=Math.max(now-Math.max(7,Number(evaluationDays)||90)*86400000,customStartAt||0);
     // Quality of data must use the same evaluation window as the index itself.
     // Otherwise old measurements could make the quality look better than the
     // actual data available for the selected period.
@@ -1808,7 +1830,7 @@ function fScoreData(){
         confidenceMissing.push(`Больше данных по тренировкам (${detail}).`);
     }
     if(!nutrition.available){
-        confidenceMissing.push(nutrition.days<2?`Записей питания: ${nutrition.days}. Нужно минимум 2 дня.`:`Больше дней с заполненным питанием за выбранный период — сейчас ${nutrition.days} из ${evaluationDays}.`);
+        confidenceMissing.push(nutrition.days<3?`Записей питания: ${nutrition.days}. Нужно минимум 3 дня.`:`Больше дней с заполненным питанием за выбранный период — сейчас ${nutrition.days} из ${evaluationDays}.`);
     } else if((nutrition.coverage||0)<0.5){
         confidenceMissing.push(`Больше дней с заполненным питанием — сейчас ${nutrition.days} из ${evaluationDays}.`);
     }
@@ -1816,7 +1838,7 @@ function fScoreData(){
     const status=!available.length?'Пока нет данных':(phase==='calibration'?'Собираем данные':statusLevel==='good'?'Динамика в норме':statusLevel==='attention'?'Есть что улучшить':'Динамика требует внимания');
     const statusReason=!available.length?'Нет доступных блоков для расчёта.':phase==='calibration'?'Расчёт предварительный: системе ещё нужна история данных.':(statusLevel==='good'?'Основные доступные показатели поддерживают выбранную цель.':statusLevel==='attention'?'Есть показатели, которые пока соответствуют цели не полностью.':'Несколько доступных показателей заметно отклоняются от выбранной цели.');
     const qualityParts={body:Math.round(bodyConfidence/100*33),training:Math.round(trainingConfidence/100*33),nutrition:0}; qualityParts.nutrition=Math.max(0,confidence-qualityParts.body-qualityParts.training);
-    return {score,status,statusLevel,statusReason,goal,history:h,measures:data.measurements||[],recent,prev,body,training,nutrition,blocks,availableCount:available.length,phase,confidence,confidenceLabel,confidenceMissing,evaluationDays,consistencyDays,measureCount,bodyDataCount,bodySelectedCount,bodySelectedWithData,weights,totalWeight,qualityParts};
+    return {score,status,statusLevel,statusReason,goal,customStartAt,history:h,measures:data.measurements||[],recent,prev,body,training,nutrition,blocks,availableCount:available.length,phase,confidence,confidenceLabel,confidenceMissing,evaluationDays,consistencyDays,measureCount,bodyDataCount,bodySelectedCount,bodySelectedWithData,weights,totalWeight,qualityParts};
 }
 function fScoreTrackScoreChange(x){
     const custom=x.goal==='custom'?getFScoreCustomConfig():null;
@@ -2003,7 +2025,7 @@ function getFScoreNextStep(x,bodyItems){
     const bodyWithHistory=Number(x.measureCount||0)>=2;
     if(!bodyWithHistory) return '📏 Сделайте следующий замер в другую дату — история тела станет точнее.';
     if(!x.training.available) return '🏋️ Добавьте завершённую тренировку с заполненными результатами.';
-    if(!x.nutrition.available) return '🍽️ Добавьте питание за несколько дней — это уточнит соответствие выбранной цели.';
+    if(!x.nutrition.available) return '🍽️ Добавьте питание минимум за 3 дня — тогда блок начнёт участвовать в Индексе.';
     if((bodyItems||[]).filter(i=>i.has).length<3) return '📏 Добавляйте те параметры тела, которые вам действительно важны — отсутствующие данные не штрафуются.';
     return '🟢 Данные собираются стабильно. Продолжайте вести тренировки, питание и замеры в привычном режиме.';
 }
@@ -2033,7 +2055,7 @@ function renderFScoreAnalytics(){
     const weights=x.weights||{body:40,training:30,nutrition:30};
     const blockMeta={
         body:x.body?.available?(x.goal==='custom'?`${x.bodySelectedWithData||0} из ${x.bodySelectedCount||0} с данными`:`${x.bodyDataCount||0} показ.`):'Нет данных',
-        training:x.training?.available?`${x.recent.length} трен.`:'Нет данных',
+        training:x.training?.available?`${x.recent.length} трен. · системность ${x.consistencyDays} дн.`:'Нет данных',
         nutrition:x.nutrition?.available?`${x.nutrition.days||0} дн.`:'Нет данных'
     };
     const blockCard=(key,icon,name)=>{
@@ -2119,7 +2141,7 @@ function renderFScoreAnalytics(){
       <div class="fscore-method-formula"><b>Веса: вес · талия · остальные</b><div><span>Набор</span><strong>30% · 10% · 60%</strong></div><div><span>Сушка</span><strong>25% · 35% · 40%</strong></div><div><span>Поддержание</span><strong>35% · 25% · 40%</strong></div></div>
     </div></details>
     <details class="fscore-method-sub"><summary>Тренировки</summary><div class="fscore-method-section">
-      <div class="fscore-method-item"><b>Системность — 45%</b><span>Частота оценивается в тренировках за неделю. Для стандартной цели 2–5 тренировок в неделю не штрафуются за сам факт высокой частоты; дополнительно учитывается равномерность и история предыдущего окна.</span></div>
+      <div class="fscore-method-item"><b>Системность — 45%</b><span>Частота оценивается в тренировках за неделю. Окно системности: ${x.consistencyDays} дней; сравнивается с непосредственно предыдущим окном такой же длины. Для стандартной цели 2–5 тренировок в неделю не штрафуются за сам факт высокой частоты; дополнительно учитывается равномерность.</span></div>
       <div class="fscore-method-item"><b>Силовая динамика — 35%</b><span>Объединяет рабочий результат и расчётный 1ПМ одного силового сигнала, чтобы один и тот же рост силы не учитывался дважды. Тренд устойчиво оценивается по истории упражнения.</span></div>
       
       <div class="fscore-method-item"><b>Объём — 20%</b><span><code>Объём = Σ(вес × повторения)</code>. Сравнивается средний объём первой и второй половины.</span></div>
@@ -2129,7 +2151,7 @@ function renderFScoreAnalytics(){
       <div class="fscore-method-item"><b>Калории — 40%</b><span>Сравнение с целью; автоматический допуск ±100 ккал. Для сушки перебор после допуска штрафуется сильнее, для набора — недобор; поддержание остаётся симметричным.</span></div>
       <div class="fscore-method-item"><b>Белок — 30%</b><span>Автоматический допуск ±10 г. В ручном КБЖУ — ±10%; достижение или превышение цели = 100, штраф только ниже нижней границы.</span></div>
       <div class="fscore-method-item"><b>Жиры + углеводы — 30%</b><span>Отдельные оценки, затем среднее. Автоматические допуски: жиры ±10 г, углеводы ±15 г; в ручном КБЖУ — ±10%.</span></div>
-      <div class="fscore-method-note">Минимум для блока — 2 дня. При малом количестве записей оценка плавно тянется к нейтральным 50, а не трактует незаписанные дни как плохое питание. Полное влияние качества питания достигается примерно при 14 заполненных днях.</div>
+      <div class="fscore-method-note">Минимум для блока — 3 заполненных дня. До этого питание не участвует в Индексе. После достижения минимума оцениваются только фактически записанные дни; пропуски не считаются плохим питанием. Количество заполненных дней отдельно влияет на качество данных.</div>
     </div></details>
     <details class="fscore-method-sub"><summary>Итог</summary><div class="fscore-method-section">
       <div class="fscore-method-formula"><b>Стандарт</b><div><strong>Тело 40% · Тренировки 30% · Питание 30%</strong></div></div>
@@ -6346,7 +6368,7 @@ function showToast(msg) {
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1.8.29', {updateViaCache:'none'})
+        navigator.serviceWorker.register('./sw.js?v=1.8.30', {updateViaCache:'none'})
             .then(reg => console.log('SW registered', reg.scope))
             .catch(err => console.log('SW failed', err));
     });
@@ -11231,7 +11253,7 @@ async function clearTemporaryFiles(){
     if(typeof showToast==='function') showToast('Все данные приложения очищены. Перезапуск…');
     setTimeout(()=>{
       // Force the current clean app shell to initialise data from defaults.
-      location.replace(location.pathname+'?v=1.8.29&reset='+Date.now());
+      location.replace(location.pathname+'?v=1.8.30&reset='+Date.now());
     },250);
   }catch(err){
     console.error('Full application reset failed',err);
