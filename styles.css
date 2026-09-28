@@ -12577,7 +12577,7 @@ strong,b{font-synthesis:none!important;}
 #workoutScreen .recommendation-note{font-size:12.5px!important;line-height:1.35!important;}
 
 
-/* v1.8.52 — compact workout header and exercise title.
+/* v1.8.56 — compact workout header and exercise title.
    Canonical final rules for the workout screen: clear back arrow,
    compact timer pill at the right, and smaller exercise title. */
 #workoutScreen .workout-head{
@@ -12645,7 +12645,7 @@ strong,b{font-synthesis:none!important;}
 }
 
 
-/* v1.8.52 — final workout screen alignment + split picker creation action.
+/* v1.8.56 — final workout screen alignment + split picker creation action.
    These are canonical end-of-file rules; older historical rules remain untouched. */
 #workoutScreen .workout-topbar{
   padding:6px 0 9px!important;
@@ -12740,7 +12740,7 @@ strong,b{font-synthesis:none!important;}
   .picker-search-create{min-width:132px!important;max-width:145px!important;font-size:11.5px!important;}
 }
 
-/* v1.8.52 — compact workout content hierarchy.
+/* v1.8.56 — compact workout content hierarchy.
    Canonical end-of-file workout rules: title/meta hierarchy, compact recommendation, set controls. */
 #workoutScreen .workout-exercise-titleblock{padding:0 0 9px!important;margin:0!important;}
 #workoutScreen .workout-exercise-title-row{display:flex!important;align-items:center!important;gap:7px!important;min-width:0!important;margin:0!important;}
@@ -12770,7 +12770,7 @@ strong,b{font-synthesis:none!important;}
 }
 
 
-/* v1.8.52 — workout notes + compact result hierarchy + F-Score alignment. */
+/* v1.8.56 — workout notes + compact result hierarchy + F-Score alignment. */
 #workoutScreen .workout-note-btn{
   width:30px!important;height:30px!important;min-width:30px!important;flex:0 0 30px!important;
   border-radius:9px!important;font-size:16px!important;line-height:1!important;
@@ -12806,7 +12806,7 @@ strong,b{font-synthesis:none!important;}
 }
 
 
-/* v1.8.52 — final F-Score text fitting on iPhone. */
+/* v1.8.56 — final F-Score text fitting on iPhone. */
 #fscoreAnalyticsScreen .fscore-goal-tabs{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;}
 #fscoreAnalyticsScreen .fscore-goal-tabs button{min-width:0!important;white-space:normal!important;overflow-wrap:anywhere!important;word-break:normal!important;line-height:1.1!important;padding-left:4px!important;padding-right:4px!important;}
 #fscoreHomeWidget .fscore-home-top>span:first-child{min-width:0!important;}
@@ -12819,4 +12819,160 @@ strong,b{font-synthesis:none!important;}
   #fscoreAnalyticsScreen .fscore-goal-tabs button{font-size:11px!important;min-height:50px!important;}
   #fscoreHomeWidget .fscore-home-delta{font-size:17px!important;}
   #fscoreHomeWidget .fscore-home-hero{gap:10px!important;}
+}
+
+
+/* v1.8.56 — unified FScore goal editor. One geometry, compact mobile cards, no legacy density collisions. */
+#fscoreCustomGoalModal .fscore-custom-editor{
+  display:flex!important;flex-direction:column!important;gap:10px!important;
+  margin:0!important;padding:0 0 12px!important;border:0!important;background:transparent!important;
+}
+#fscoreCustomGoalModal .fscore-editor-hero{
+  display:flex!important;align-items:center!important;gap:11px!important;
+  margin:0!important;padding:12px 13px!important;border:1px solid var(--border)!important;
+  border-radius:16px!important;background:linear-gradient(135deg,rgba(255,255,255,.055),rgba(255,255,255,.02))!important;
+}
+#fscoreCustomGoalModal .fscore-editor-icon{
+  width:40px!important;height:40px!important;flex:0 0 40px!important;display:grid!important;place-items:center!important;
+  border-radius:12px!important;background:rgba(52,199,89,.12)!important;font-size:20px!important;
+}
+#fscoreCustomGoalModal .fscore-editor-hero strong{display:block!important;font-size:17px!important;line-height:1.15!important;font-weight:900!important;}
+#fscoreCustomGoalModal .fscore-editor-hero span{display:block!important;margin-top:3px!important;color:var(--subtext)!important;font-size:11px!important;line-height:1.35!important;}
+#fscoreCustomGoalModal .fscore-custom-grid{display:grid!important;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr)!important;gap:9px!important;margin:0!important;}
+#fscoreCustomGoalModal .fscore-custom-grid label{display:flex!important;flex-direction:column!important;gap:5px!important;min-width:0!important;color:var(--subtext)!important;font-size:10px!important;font-weight:850!important;letter-spacing:.02em!important;}
+#fscoreCustomGoalModal .fscore-custom-grid input,#fscoreCustomGoalModal .fscore-custom-grid select,
+#fscoreCustomGoalModal .fscore-custom-training input,#fscoreCustomGoalModal .fscore-custom-kbju input,
+#fscoreCustomGoalModal .fscore-custom-section select{
+  width:100%!important;min-width:0!important;height:42px!important;min-height:42px!important;margin:0!important;padding:0 11px!important;
+  box-sizing:border-box!important;border:1px solid var(--border)!important;border-radius:11px!important;background:var(--card-bg)!important;color:var(--text)!important;font:inherit!important;font-size:14px!important;font-weight:750!important;
+}
+#fscoreCustomGoalModal .fscore-mode-info{margin:0!important;padding:9px 11px!important;border-radius:12px!important;background:rgba(52,199,89,.055)!important;border:1px solid rgba(52,199,89,.16)!important;}
+#fscoreCustomGoalModal .fscore-mode-info span{font-size:11px!important;line-height:1.35!important;color:var(--subtext)!important;}
+#fscoreCustomGoalModal .fscore-evaluation-field{margin:0!important;padding:12px!important;border:1px solid var(--border)!important;border-radius:16px!important;background:rgba(255,255,255,.025)!important;}
+#fscoreCustomGoalModal .fscore-field-heading{display:flex!important;align-items:baseline!important;justify-content:space-between!important;gap:10px!important;margin:0 0 9px!important;}
+#fscoreCustomGoalModal .fscore-field-heading b{font-size:16px!important;line-height:1.15!important;font-weight:900!important;}
+#fscoreCustomGoalModal .fscore-field-heading span{font-size:10px!important;color:var(--subtext)!important;text-align:right!important;}
+#fscoreCustomGoalModal .fscore-period-presets{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr)) minmax(52px,.8fr)!important;gap:6px!important;margin:0!important;}
+#fscoreCustomGoalModal .fscore-period-presets button{width:100%!important;min-width:0!important;height:40px!important;min-height:40px!important;margin:0!important;padding:0 4px!important;border:1px solid var(--border)!important;border-radius:10px!important;background:var(--card-bg)!important;color:var(--text)!important;font-size:11px!important;font-weight:850!important;white-space:nowrap!important;}
+#fscoreCustomGoalModal .fscore-period-presets button.active{background:rgba(52,199,89,.13)!important;border-color:rgba(52,199,89,.42)!important;color:var(--text)!important;}
+#fscoreCustomGoalModal #fscoreCustomPeriodInputWrap{display:flex!important;align-items:center!important;gap:7px!important;margin:7px 0 0!important;}
+#fscoreCustomGoalModal #fscoreCustomPeriodInputWrap.hidden{display:none!important;}
+#fscoreCustomGoalModal #fscoreCustomPeriodInputWrap input{flex:1!important;min-width:0!important;height:40px!important;}
+#fscoreCustomGoalModal .fscore-factor-weight-section{margin:0!important;padding:12px!important;border:1px solid rgba(52,199,89,.22)!important;border-radius:16px!important;background:rgba(52,199,89,.045)!important;}
+#fscoreCustomGoalModal .fscore-factor-weight-heading{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;margin:0 0 9px!important;}
+#fscoreCustomGoalModal .fscore-factor-weight-heading>div{min-width:0!important;}
+#fscoreCustomGoalModal .fscore-factor-weight-heading b{display:block!important;font-size:16px!important;line-height:1.15!important;font-weight:900!important;}
+#fscoreCustomGoalModal .fscore-factor-weight-heading span{display:block!important;margin-top:3px!important;color:var(--subtext)!important;font-size:10px!important;line-height:1.3!important;}
+#fscoreCustomGoalModal .fscore-factor-weight-heading>strong{min-width:50px!important;padding:6px 8px!important;border-radius:9px!important;background:rgba(52,199,89,.13)!important;color:var(--text)!important;font-size:13px!important;text-align:center!important;}
+#fscoreCustomGoalModal .fscore-factor-weight-section .fscore-custom-weights{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;margin:0!important;padding:0!important;}
+#fscoreCustomGoalModal .fscore-factor-weight-section .fscore-custom-weights label{display:flex!important;flex-direction:column!important;gap:4px!important;min-width:0!important;color:var(--subtext)!important;font-size:10px!important;font-weight:850!important;text-align:center!important;}
+#fscoreCustomGoalModal .fscore-factor-weight-section .fscore-custom-weights input{height:38px!important;min-height:38px!important;padding:0 6px!important;text-align:center!important;font-size:15px!important;font-weight:900!important;}
+#fscoreCustomGoalModal .fscore-custom-section{margin:0!important;border:1px solid var(--border)!important;border-radius:16px!important;background:rgba(255,255,255,.025)!important;overflow:hidden!important;}
+#fscoreCustomGoalModal .fscore-custom-section>summary{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:9px!important;min-height:52px!important;margin:0!important;padding:0 13px!important;box-sizing:border-box!important;color:var(--text)!important;font-size:15px!important;font-weight:900!important;}
+#fscoreCustomGoalModal .fscore-custom-section>summary>span{display:inline-flex!important;align-items:center!important;min-width:0!important;}
+#fscoreCustomGoalModal .fscore-custom-section>summary>small{margin-left:auto!important;color:var(--subtext)!important;font-size:10px!important;font-weight:750!important;white-space:nowrap!important;}
+#fscoreCustomGoalModal .fscore-target-intro{margin:0!important;padding:0 13px 7px!important;border-top:1px solid rgba(255,255,255,.045)!important;border-bottom:0!important;}
+#fscoreCustomGoalModal .fscore-target-count{margin:0!important;padding:0!important;color:var(--subtext)!important;font-size:10px!important;font-weight:800!important;}
+#fscoreCustomGoalModal .fscore-target-rules{display:flex!important;flex-wrap:wrap!important;gap:5px!important;margin:0 13px 7px!important;padding:0!important;background:transparent!important;color:var(--subtext)!important;font-size:9px!important;line-height:1.25!important;}
+#fscoreCustomGoalModal .fscore-target-rules span{padding:5px 7px!important;border-radius:8px!important;background:rgba(255,255,255,.035)!important;}
+#fscoreCustomGoalModal .fscore-target-rules b{color:var(--text)!important;}
+#fscoreCustomGoalModal .fscore-custom-targets{display:flex!important;flex-direction:column!important;gap:6px!important;margin:0!important;padding:0 10px 7px!important;}
+#fscoreCustomGoalModal .fscore-target-card{margin:0!important;padding:10px!important;border:1px solid rgba(255,255,255,.09)!important;border-radius:13px!important;background:rgba(0,0,0,.10)!important;opacity:1!important;}
+#fscoreCustomGoalModal .fscore-target-card.enabled{border-color:rgba(52,199,89,.28)!important;}
+#fscoreCustomGoalModal .fscore-target-head{display:grid!important;grid-template-columns:22px minmax(0,1fr) 118px!important;align-items:center!important;gap:7px!important;margin:0!important;}
+#fscoreCustomGoalModal .fscore-target-check{width:22px!important;height:22px!important;}
+#fscoreCustomGoalModal .fscore-target-checkmark{width:19px!important;height:19px!important;border-radius:6px!important;}
+#fscoreCustomGoalModal .fscore-target-name{min-width:0!important;margin:0!important;color:var(--text)!important;font-size:15px!important;line-height:1.15!important;font-weight:900!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+#fscoreCustomGoalModal .fscore-target-head .fscore-target-direction{width:118px!important;min-width:0!important;height:36px!important;min-height:36px!important;margin:0!important;padding:0 7px!important;border-radius:9px!important;font-size:11px!important;font-weight:850!important;}
+#fscoreCustomGoalModal .fscore-target-values{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:7px!important;margin:8px 0 0!important;padding:0!important;}
+#fscoreCustomGoalModal .fscore-target-value-cell{min-width:0!important;display:flex!important;flex-direction:column!important;gap:4px!important;margin:0!important;}
+#fscoreCustomGoalModal .fscore-target-value-cell>span{font-size:9px!important;line-height:1!important;font-weight:850!important;color:var(--subtext)!important;}
+#fscoreCustomGoalModal .fscore-target-value-cell strong,#fscoreCustomGoalModal .fscore-target-value-cell>div{height:40px!important;min-height:40px!important;border-radius:10px!important;background:rgba(20,20,29,.55)!important;}
+#fscoreCustomGoalModal .fscore-target-value-cell strong{padding:0 10px!important;font-size:15px!important;}
+#fscoreCustomGoalModal .fscore-target-value-cell input{height:38px!important;min-height:38px!important;padding:0 8px!important;font-size:15px!important;}
+#fscoreCustomGoalModal .fscore-target-value-cell em{padding-right:8px!important;font-size:10px!important;}
+#fscoreCustomGoalModal .fscore-target-values .fscore-target-value-cell.tolerance{grid-column:1/-1!important;display:flex!important;flex-direction:row!important;align-items:center!important;gap:8px!important;padding-top:1px!important;}
+#fscoreCustomGoalModal .fscore-target-values .fscore-target-value-cell.tolerance>span{flex:0 0 auto!important;}
+#fscoreCustomGoalModal .fscore-target-values .fscore-target-value-cell.tolerance>div{flex:1!important;min-width:0!important;}
+#fscoreCustomGoalModal .fscore-target-value-cell.hidden,#fscoreCustomGoalModal .fscore-target-corridor.hidden{display:none!important;}
+#fscoreCustomGoalModal .fscore-target-corridor{margin:6px 0 0!important;padding:5px 8px!important;border-radius:8px!important;background:rgba(255,255,255,.035)!important;color:var(--subtext)!important;font-size:9px!important;line-height:1.2!important;}
+#fscoreCustomGoalModal .fscore-inactive-toggle{width:calc(100% - 20px)!important;min-height:34px!important;margin:0 10px 10px!important;padding:5px 8px!important;border-radius:9px!important;font-size:10px!important;font-weight:850!important;}
+#fscoreCustomGoalModal .fscore-custom-training,#fscoreCustomGoalModal .fscore-custom-kbju{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;margin:0!important;padding:10px 12px!important;}
+#fscoreCustomGoalModal .fscore-custom-training label,#fscoreCustomGoalModal .fscore-custom-kbju label{display:flex!important;flex-direction:column!important;gap:4px!important;color:var(--subtext)!important;font-size:10px!important;font-weight:850!important;}
+#fscoreCustomGoalModal .fscore-training-weight-editor{margin:0 12px 10px!important;padding:9px 10px!important;border:1px solid var(--border)!important;border-radius:11px!important;background:rgba(255,255,255,.025)!important;}
+#fscoreCustomGoalModal .fscore-training-weight-head{display:flex!important;justify-content:space-between!important;align-items:center!important;margin-bottom:7px!important;color:var(--subtext)!important;font-size:10px!important;font-weight:800!important;}
+#fscoreCustomGoalModal .fscore-training-weight-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important;}
+#fscoreCustomGoalModal .fscore-training-weight-grid label{display:grid!important;gap:4px!important;color:var(--subtext)!important;font-size:9px!important;font-weight:800!important;}
+#fscoreCustomGoalModal .fscore-training-weight-grid input{height:36px!important;min-height:36px!important;text-align:center!important;}
+#fscoreCustomGoalModal .fscore-nutrition-section>.fscore-manual-nutrition{padding-bottom:1px!important;}
+#fscoreCustomGoalModal .fscore-nutrition-default-note{margin:0 12px 8px!important;padding:7px 9px!important;border-radius:9px!important;background:rgba(255,255,255,.035)!important;color:var(--subtext)!important;font-size:9px!important;line-height:1.3!important;}
+#fscoreCustomGoalModal .fscore-goal-editor-actions{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;margin:2px 0 0!important;padding:0!important;}
+#fscoreCustomGoalModal .fscore-custom-save,#fscoreCustomGoalModal .fscore-custom-delete-goal{width:100%!important;min-height:48px!important;margin:0!important;border-radius:13px!important;font-size:15px!important;font-weight:900!important;}
+#fscoreCustomGoalModal .fscore-custom-delete-goal{min-height:44px!important;background:var(--button-gray)!important;border:0!important;color:var(--text)!important;}
+#fscoreCustomGoalModal .fscore-custom-grid input:focus,#fscoreCustomGoalModal .fscore-custom-grid select:focus,
+#fscoreCustomGoalModal .fscore-custom-section input:focus,#fscoreCustomGoalModal .fscore-custom-section select:focus{
+  outline:none!important;border-color:var(--accent)!important;box-shadow:0 0 0 3px rgba(52,199,89,.10)!important;
+}
+/* Analytics goal tabs: use one consistent segmented control instead of three unrelated cards. */
+#fscoreAnalyticsScreen .fscore-goal-tabs{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important;padding:0 12px 11px!important;}
+#fscoreAnalyticsScreen .fscore-goal-tabs button{min-width:0!important;min-height:44px!important;margin:0!important;padding:0 5px!important;border:1px solid var(--border)!important;border-radius:11px!important;background:rgba(255,255,255,.025)!important;color:var(--text)!important;font-size:11px!important;font-weight:850!important;line-height:1.1!important;white-space:normal!important;}
+#fscoreAnalyticsScreen .fscore-goal-tabs button span{font-size:15px!important;}
+#fscoreAnalyticsScreen .fscore-goal-tabs button.active{background:rgba(52,199,89,.11)!important;border-color:rgba(52,199,89,.38)!important;box-shadow:none!important;}
+#fscoreAnalyticsScreen .fscore-goal-tabs button:active{transform:scale(.985)!important;}
+@media(max-width:390px){
+  #fscoreCustomGoalModal .fscore-custom-grid{grid-template-columns:1fr!important;}
+  #fscoreCustomGoalModal .fscore-period-presets{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  #fscoreCustomGoalModal .fscore-factor-weight-section .fscore-custom-weights{grid-template-columns:repeat(3,minmax(0,1fr))!important;}
+  #fscoreCustomGoalModal .fscore-target-head{grid-template-columns:22px minmax(0,1fr) 112px!important;}
+  #fscoreCustomGoalModal .fscore-target-head .fscore-target-direction{width:112px!important;font-size:10px!important;}
+  #fscoreCustomGoalModal .fscore-target-name{font-size:14px!important;}
+}
+@media(max-width:340px){
+  #fscoreCustomGoalModal .fscore-target-head{grid-template-columns:22px minmax(0,1fr)!important;}
+  #fscoreCustomGoalModal .fscore-target-head .fscore-target-direction{grid-column:2!important;width:100%!important;margin-top:5px!important;}
+  #fscoreCustomGoalModal .fscore-target-values{margin-top:7px!important;}
+}
+
+
+/* v1.8.56 — compact unified system toast.
+   One small notification surface for all showToast() messages.
+   It stays below the iOS safe area and never expands to a full-width panel. */
+.toast{
+  position:fixed!important;
+  top:calc(env(safe-area-inset-top,0px) + 8px)!important;
+  left:50%!important;
+  right:auto!important;
+  bottom:auto!important;
+  width:max-content!important;
+  max-width:min(calc(100vw - 28px),340px)!important;
+  min-width:0!important;
+  min-height:0!important;
+  height:auto!important;
+  margin:0!important;
+  padding:8px 13px!important;
+  box-sizing:border-box!important;
+  border-radius:12px!important;
+  background:rgba(28,28,30,.96)!important;
+  color:#f5f5f7!important;
+  border:1px solid rgba(255,255,255,.10)!important;
+  box-shadow:0 7px 20px rgba(0,0,0,.24)!important;
+  text-align:center!important;
+  font-size:13px!important;
+  font-weight:750!important;
+  line-height:1.25!important;
+  z-index:2147483647!important;
+  pointer-events:none!important;
+  opacity:0!important;
+  transform:translate(-50%,-130%)!important;
+  transition:transform .20s ease,opacity .16s ease!important;
+}
+.toast.toast-visible{
+  transform:translate(-50%,0)!important;
+  opacity:1!important;
+}
+body.light-mode .toast{
+  background:rgba(255,255,255,.97)!important;
+  color:#1c1c1e!important;
+  border-color:rgba(0,0,0,.10)!important;
+  box-shadow:0 7px 20px rgba(0,0,0,.14)!important;
 }

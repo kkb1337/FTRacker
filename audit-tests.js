@@ -1,4 +1,4 @@
-/* FTracker v1.8.52 workout logic regression tests; run with: node audit-tests.js */
+/* FTracker v1.8.56 workout logic regression tests; run with: node audit-tests.js */
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const app=fs.readFileSync('app.js','utf8');
@@ -30,11 +30,10 @@ assert.doesNotMatch(app,/if\(programName && entry\.program!==programName\) retur
 assert.match(app,/const base=getBestQualifiedStrengthResult\(exerciseName,programName,before\);/);
 assert.doesNotMatch(app,/const base=working\|\|fallback/);
 
-// Top progress must use required units, not number of existing input rows.
-assert.match(app,/Global workout progress counts every actual set slot/);
-assert.match(app,/total \+= required \+ Math\.max\(0, rows-required\)/);
-assert.match(app,/done \+= completed/);
-assert.doesNotMatch(app,/done\s*\+=\s*Math\.min\(completed,required\)/);
+// Top progress uses the planned required units and never penalizes additional completed sets.
+assert.match(app,/const baseTotal=activeIndices\.reduce\(\(sum,idx\)=>sum\+getWorkoutCompletionTarget/);
+assert.match(app,/const completed=activeIndices\.reduce\(\(sum,idx\)=>sum\+countWorkoutSetResults/);
+assert.match(app,/const total=Math\.max\(baseTotal,completed\)/);
 
 // Recommendation card contains only the target; explanatory copy is removed.
 assert.doesNotMatch(app,/Почему стоит улучшить/);
@@ -48,20 +47,29 @@ assert.doesNotMatch(app,/insertAdjacentHTML\('beforeend', `.*program-picker-add-
 assert.match(index,/exercisePickerSearch/);
 
 // Release metadata must be synchronized.
-for(const s of [app,index,manifest,sw,readme]) assert.ok(s.includes('1.8.52'),'stale release version');
-assert.ok(index.includes('от 22.09.26'),'release date missing');
-assert.ok(sw.includes("const APP_VERSION = '1.8.52'"),'SW cache version missing');
+for(const s of [app,index,manifest,sw,readme]) assert.ok(s.includes('1.8.56'),'stale release version');
+assert.ok(index.includes('от 28.09.26'),'release date missing');
+assert.ok(sw.includes("const APP_VERSION = '1.8.56'"),'SW cache version missing');
 
-console.log('FTracker v1.8.52 workout logic regression tests: OK');
 
-// v1.8.52: replacement creation must replace the frozen slot, not append.
+assert.ok(app.includes("weights:{systemity:40,strength:60}"),'training index default weights must be 40/60');
+assert.ok(!app.includes('fscoreCustomTrainingVolumeWeight'),'custom goal editor must not expose volume weight');
+assert.ok(!app.includes("name:'Объём'"),'volume must not be a training Index factor');
+assert.ok(app.includes("name:'Системность'"),'systemity factor missing');
+assert.ok(app.includes("name:'Силовая динамика'"),'strength factor missing');
+assert.ok(app.includes('createdAt'), 'custom goal creation baseline missing');
+assert.ok(app.includes('Math.max(now-days*86400000,Number(startAt)||0)'), 'goal startAt baseline missing');
+assert.ok(app.includes('const total=Math.max(baseTotal,completed);'),'extra completed sets must not reduce workout progress');
+console.log('FTracker v1.8.56 workout logic regression tests: OK');
+
+// v1.8.56: replacement creation must replace the frozen slot, not append.
 assert(fs.readFileSync('app.js','utf8').includes("workoutNewExerciseContext={mode:'replace',slot,programIndex:Number(currentProgram),oldRef:slots[slot]}"), 'replace creation context must freeze slot before closing replace modal');
 assert(fs.readFileSync('app.js','utf8').includes('slots.splice(slot,1,ref);'), 'new exercise replacement must replace the selected slot');
 
 
-// v1.8.52: workout header UI remains compact and uses a clear back arrow.
+// v1.8.56: workout header UI remains compact and uses a clear back arrow.
 assert.ok(index.includes('class="workout-close"'),'workout back control missing');
 assert.ok(index.includes('>←</button>'),'workout back arrow missing');
-assert.ok(css.includes('v1.8.52 — workout notes'),'v1.8.52 workout UI block missing');
+assert.ok(css.includes('v1.8.56 — workout notes'),'v1.8.56 workout UI block missing');
 assert.ok(css.includes('#workoutScreen .workout-time'),'workout timer styling missing');
 assert.ok(css.includes('#workoutScreen .workout-exercise-name-large'),'workout exercise title styling missing');
