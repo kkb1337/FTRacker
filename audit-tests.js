@@ -1,4 +1,4 @@
-/* FTracker v1.8.59 logic regression tests; run with: node audit-tests.js */
+/* FTracker v1.8.61 logic regression tests; run with: node audit-tests.js */
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const app=fs.readFileSync('app.js','utf8');
@@ -52,9 +52,9 @@ assert.doesNotMatch(app,/insertAdjacentHTML\('beforeend', `.*program-picker-add-
 assert.match(index,/exercisePickerSearch/);
 
 // Release metadata must be synchronized.
-for(const s of [app,index,manifest,sw,readme]) assert.ok(s.includes('1.8.59'),'stale release version');
+for(const s of [app,index,manifest,sw,readme]) assert.ok(s.includes('1.8.61'),'stale release version');
 assert.ok(index.includes('от 30.09.26'),'release date missing');
-assert.ok(sw.includes("const APP_VERSION = '1.8.59'"),'SW cache version missing');
+assert.ok(sw.includes("const APP_VERSION = '1.8.61'"),'SW cache version missing');
 
 
 assert.ok(app.includes("weights:{systemity:40,strength:60}"),'training index default weights must be 40/60');
@@ -65,7 +65,7 @@ assert.ok(app.includes("name:'Силовая динамика'"),'strength facto
 assert.ok(app.includes('createdAt'), 'custom goal creation baseline missing');
 assert.ok(app.includes('Math.max(now-days*86400000,Number(startAt)||0)'), 'goal startAt baseline missing');
 assert.ok(app.includes('const total=baseTotal;'),'extra completed sets must not expand workout progress');
-console.log('FTracker v1.8.59 logic regression tests: OK');
+console.log('FTracker v1.8.61 logic regression tests: OK');
 
 // v1.8.57: replacement creation must replace the frozen slot, not append.
 assert(fs.readFileSync('app.js','utf8').includes("workoutNewExerciseContext={mode:'replace',slot,programIndex:Number(currentProgram),oldRef:slots[slot]}"), 'replace creation context must freeze slot before closing replace modal');
@@ -79,7 +79,7 @@ assert.ok(css.includes('v1.8.57 — workout notes'),'v1.8.57 workout UI block mi
 assert.ok(css.includes('#workoutScreen .workout-time'),'workout timer styling missing');
 assert.ok(css.includes('#workoutScreen .workout-exercise-name-large'),'workout exercise title styling missing');
 
-// v1.8.59: partial food diary days are excluded until at least 70% of calorie target.
+// v1.8.61: partial food diary days are excluded until at least 70% of calorie target.
 assert.match(app,/d\.cal>=target\*0\.70/,'nutrition days must meet the 70% calorie threshold');
 assert.match(app,/if\(days\.length<3\)return \{score:null,available:false,days:days\.length/,'nutrition Index requires at least three eligible days');
 assert.match(app,/blockEnabled:\{body:cfg\.blockEnabled\?\.body!==false,training:cfg\.blockEnabled\?\.training!==false,nutrition:cfg\.blockEnabled\?\.nutrition!==false\}/,'custom goal factor switches must persist');
@@ -87,9 +87,25 @@ assert.match(app,/toggleFScoreFactor\('nutrition'\)/,'nutrition factor toggle mi
 assert.match(app,/const enabledWeightSum=/,'custom goal weights must normalize only enabled factors');
 assert.match(app,/Выключено в цели/,'disabled factor should not be treated as missing data');
 
-// v1.8.59: tolerance is a maintain-only UI field. The hidden class must
+// v1.8.61: tolerance is a maintain-only UI field. The hidden class must
 // override the more-specific flex layout rule.
 assert.match(css,/\.fscore-target-values \.fscore-target-value-cell\.tolerance\.hidden\{display:none!important;\}/,
   'non-maintain tolerance field must remain hidden');
 
-console.log('FTracker v1.8.59 nutrition/custom-factor regression checks: OK');
+// v1.8.61: enabled Index factors must always sum to exactly 100%.
+assert.match(app,/function normalizeFScoreBlockWeights\(raw,enabled\)/,'Index weight normalization helper missing');
+assert.match(app,/const bw=normalizeFScoreBlockWeights\(rawBlockWeights,blockEnabled\)/,'saved custom goal weights must be normalized');
+assert.match(app,/const normBW=normalizeFScoreBlockWeights\(rawBW,blockEnabled\)/,'loaded custom goal weights must be normalized');
+assert.match(app,/The edited field is authoritative/,'edited factor must remain authoritative');
+assert.match(app,/Only the OTHER enabled factors/,'only other active factors may be rebalanced');
+const normalize=(raw,enabled)=>{const keys=['body','training','nutrition'];const clean=Object.fromEntries(keys.map(k=>[k,Math.max(0,Math.min(100,Number(raw?.[k])||0))]));const active=keys.filter(k=>enabled?.[k]);if(!active.length)return clean;const sum=active.reduce((s,k)=>s+clean[k],0);if(sum<=0){const base=Math.floor(100/active.length),remainder=100-base*active.length;active.forEach((k,i)=>clean[k]=base+(i===active.length-1?remainder:0));return clean;}let used=0;active.forEach((k,i)=>{if(i===active.length-1)clean[k]=100-used;else{clean[k]=Math.round(clean[k]/sum*100);used+=clean[k];}});return clean;};
+assert.deepEqual(normalize({body:40,training:30,nutrition:30},{body:true,training:true,nutrition:true}),{body:40,training:30,nutrition:30});
+assert.deepEqual(normalize({body:40,training:30,nutrition:30},{body:true,training:true,nutrition:false}),{body:57,training:43,nutrition:30});
+assert.deepEqual(normalize({body:50,training:100,nutrition:20},{body:true,training:true,nutrition:false}),{body:33,training:67,nutrition:20});
+assert.deepEqual(normalize({body:50,training:50,nutrition:20},{body:true,training:false,nutrition:true}),{body:71,training:50,nutrition:29});
+const zero=normalize({body:0,training:0,nutrition:0},{body:true,training:true,nutrition:true}); assert.equal(zero.body+zero.training+zero.nutrition,100);
+const rebalanceEdited=(weights,enabled,changedKey,value)=>{const out={...weights, [changedKey]:Math.max(0,Math.min(100,value))}; const others=['body','training','nutrition'].filter(k=>k!==changedKey&&enabled[k]); const remaining=100-out[changedKey]; const sum=others.reduce((a,k)=>a+Math.max(0,weights[k]),0); let used=0; others.forEach((k,i)=>{if(i===others.length-1)out[k]=remaining-used;else{const v=sum>0?Math.round(remaining*weights[k]/sum):Math.round(remaining/others.length);out[k]=v;used+=v;}}); return out;};
+assert.deepEqual(rebalanceEdited({body:40,training:30,nutrition:30},{body:true,training:true,nutrition:true},'body',70),{body:70,training:15,nutrition:15});
+assert.deepEqual(rebalanceEdited({body:70,training:15,nutrition:15},{body:true,training:true,nutrition:false},'body',70),{body:70,training:30,nutrition:15});
+assert.deepEqual(rebalanceEdited({body:50,training:30,nutrition:20},{body:true,training:true,nutrition:true},'training',60),{body:29,training:60,nutrition:11});
+console.log('FTracker v1.8.61 Index-weight regression checks: OK');

@@ -1,4 +1,4 @@
-/* FTracker v1.8.59 — Workout replacement/create state fix.
+/* FTracker v1.8.61 — Workout replacement/create state fix.
    Consolidated from the audited inline runtimes without changing their order. */
 
 /* ===== CONSOLIDATED RUNTIME BLOCK 1 ===== */
@@ -901,9 +901,8 @@ function getFScoreCustomGoals(){
             }
             const bw=c.blockWeights&&typeof c.blockWeights==='object'?c.blockWeights:{};
             const nums={body:Number(bw.body),training:Number(bw.training),nutrition:Number(bw.nutrition)};
-            const valid=Object.values(nums).every(Number.isFinite)&&Object.values(nums).every(v=>v>=0)&&Object.values(nums).some(v=>v>0); const normBW=valid?{body:Math.min(100,nums.body),training:Math.min(100,nums.training),nutrition:Math.min(100,nums.nutrition)}:{body:40,training:30,nutrition:30};
+            const valid=Object.values(nums).every(Number.isFinite)&&Object.values(nums).every(v=>v>=0)&&Object.values(nums).some(v=>v>0); const rawBW=valid?{body:Math.min(100,nums.body),training:Math.min(100,nums.training),nutrition:Math.min(100,nums.nutrition)}:{body:40,training:30,nutrition:30}; const be=c.blockEnabled&&typeof c.blockEnabled==='object'?c.blockEnabled:{}; const blockEnabled={body:be.body!==false,training:be.training!==false,nutrition:be.nutrition!==false}; const normBW=normalizeFScoreBlockWeights(rawBW,blockEnabled);
             const tr=c.training&&typeof c.training==='object'?c.training:{}; const tw=tr.weights&&typeof tr.weights==='object'?tr.weights:{}; const legacyTarget=Number(tr.target); const trainingPeriod=Math.max(7,Math.min(365,Number(tr.period)||30)); const weeklyTarget=legacyTarget>7?legacyTarget*7/trainingPeriod:(Number.isFinite(legacyTarget)&&legacyTarget>0?legacyTarget:3); const legacyStrength=Number.isFinite(Number(tw.strength))?Number(tw.strength):Number(tw.working||0)+Number(tw.e1rm||0); const rawTW={systemity:Number(tw.systemity),strength:legacyStrength}; const validTW=Object.values(rawTW).every(Number.isFinite)&&Object.values(rawTW).every(v=>v>=0)&&Object.values(rawTW).some(v=>v>0); const normTW=validTW?{systemity:Math.round(rawTW.systemity/(rawTW.systemity+rawTW.strength||1)*100),strength:Math.round(rawTW.strength/(rawTW.systemity+rawTW.strength||1)*100)}:{systemity:40,strength:60}; normTW.strength+=100-(normTW.systemity+normTW.strength); const nu=c.nutrition&&typeof c.nutrition==='object'?c.nutrition:{};
-            const be=c.blockEnabled&&typeof c.blockEnabled==='object'?c.blockEnabled:{}; const blockEnabled={body:be.body!==false,training:be.training!==false,nutrition:be.nutrition!==false};
             return {id:String(c.id||('cg_legacy_'+i)),name:String(c.name||'').trim().slice(0,40),mode:['gain','cut','maintain'].includes(c.mode)?c.mode:'maintain',evaluationDays:Math.max(7,Math.min(365,Number(c.evaluationDays)||90)),createdAt:Number(c.createdAt)>0?Number(c.createdAt):null,targets,training:{target:Math.max(1,Math.min(7,weeklyTarget)),period:String(trainingPeriod),weights:normTW},nutrition:{auto:nu.auto!==false,calories:Math.max(0,Number(nu.calories)||0),protein:Math.max(0,Number(nu.protein)||0),fat:Math.max(0,Number(nu.fat)||0),carbs:Math.max(0,Number(nu.carbs)||0),toleranceCalories:Math.max(0,Number.isFinite(Number(nu.toleranceCalories))?Number(nu.toleranceCalories):10),toleranceProtein:Math.max(0,Number.isFinite(Number(nu.toleranceProtein))?Number(nu.toleranceProtein):10),toleranceFat:Math.max(0,Number.isFinite(Number(nu.toleranceFat))?Number(nu.toleranceFat):10),toleranceCarbs:Math.max(0,Number.isFinite(Number(nu.toleranceCarbs))?Number(nu.toleranceCarbs):10)},blockWeights:normBW,blockEnabled};
         }).filter(c=>c.name);
         // Удаляем старую автоматически созданную заглушку «Моя цель», если существует хотя бы одна реально сохранённая пользовательская цель.
@@ -1216,30 +1215,110 @@ function toggleFScoreNutritionMode(){
     const hint=document.getElementById('fscoreNutritionSourceHint');
     if(hint)hint.textContent=manual?'Вы сами задаёте цели и допустимые диапазоны ниже.':'Используются текущие автоматически рассчитанные лимиты FTracker для выбранного типа цели.';
 }
+function normalizeFScoreBlockWeights(raw,enabled){
+    const keys=['body','training','nutrition'];
+    const clean=Object.fromEntries(keys.map(k=>[k,Math.max(0,Math.min(100,Number(raw?.[k])||0))]));
+    const active=keys.filter(k=>enabled?.[k]);
+    if(!active.length)return clean;
+    const sum=active.reduce((s,k)=>s+clean[k],0);
+    if(sum<=0){
+        const base=Math.floor(100/active.length), remainder=100-base*active.length;
+        active.forEach((k,i)=>clean[k]=base+(i===active.length-1?remainder:0));
+        return clean;
+    }
+    let used=0;
+    active.forEach((k,i)=>{
+        if(i===active.length-1){clean[k]=100-used;}
+        else {clean[k]=Math.round(clean[k]/sum*100);used+=clean[k];}
+    });
+    return clean;
+}
 function updateFScoreWeightTotal(){
     const keys=['body','training','nutrition'];
     const raw=Object.fromEntries(keys.map(k=>{const id=`fscoreCustom${k[0].toUpperCase()+k.slice(1)}Weight`;const v=Number(document.getElementById(id)?.value)||0;return [k,Math.max(0,Math.min(100,v))];}));
     const enabled=Object.fromEntries(keys.map(k=>[k,!!document.getElementById(`fscoreCustom${k[0].toUpperCase()+k.slice(1)}Enabled`)?.checked]));
-    const activeSum=keys.reduce((sum,k)=>sum+(enabled[k]?raw[k]:0),0);
+    const normalized=normalizeFScoreBlockWeights(raw,enabled);
+    keys.forEach(k=>{const input=document.getElementById(`fscoreCustom${k[0].toUpperCase()+k.slice(1)}Weight`);if(input&&enabled[k])input.value=normalized[k];});
+    const activeSum=keys.reduce((sum,k)=>sum+(enabled[k]?normalized[k]:0),0);
     const el=document.getElementById('fscoreCustomWeightTotal');
-    if(el) el.textContent=activeSum>0?'Нормировано до 100%':'Выберите фактор';
+    if(el) el.textContent=activeSum===100?'Сумма: 100%':'Выберите фактор';
     const draft=window.__fscoreCustomDraft;
-    if(draft){ draft.blockWeights=raw; draft.blockEnabled=enabled; }
+    if(draft){ draft.blockWeights=normalized; draft.blockEnabled=enabled; }
 }
 function rebalanceFScoreWeights(changedKey){
-    const id=`fscoreCustom${changedKey[0].toUpperCase()+changedKey.slice(1)}Weight`;
-    const input=document.getElementById(id); if(!input)return;
-    input.value=Math.max(0,Math.min(100,Number(input.value)||0));
+    // The edited field is authoritative. Only the OTHER enabled factors are
+    // allowed to move so a user can enter an exact target such as 70/15/15.
+    const keys=['body','training','nutrition'];
+    const ids=Object.fromEntries(keys.map(k=>[k,`fscoreCustom${k[0].toUpperCase()+k.slice(1)}Weight`]));
+    const enabled=Object.fromEntries(keys.map(k=>[k,!!document.getElementById(`fscoreCustom${k[0].toUpperCase()+k.slice(1)}Enabled`)?.checked]));
+    const changedInput=document.getElementById(ids[changedKey]); if(!changedInput)return;
+    const changed=Math.max(0,Math.min(100,Number(changedInput.value)||0));
+    changedInput.value=changed;
+    const others=keys.filter(k=>k!==changedKey&&enabled[k]);
+    const remaining=100-changed;
+    if(others.length){
+        const old=others.map(k=>Math.max(0,Number(document.getElementById(ids[k])?.value)||0));
+        const sum=old.reduce((a,b)=>a+b,0);
+        let used=0;
+        others.forEach((k,i)=>{
+            const input=document.getElementById(ids[k]);
+            if(!input)return;
+            if(i===others.length-1) input.value=remaining-used;
+            else {
+                const value=sum>0?Math.round(remaining*old[i]/sum):Math.round(remaining/others.length);
+                input.value=value; used+=value;
+            }
+        });
+    }
     updateFScoreWeightTotal();
     updateFScoreLiveIndexUI();
 }
 function toggleFScoreFactor(key){
+    const keys=['body','training','nutrition'];
     const ids={body:'fscoreCustomBodyEnabled',training:'fscoreCustomTrainingEnabled',nutrition:'fscoreCustomNutritionEnabled'};
     const checkbox=document.getElementById(ids[key]); if(!checkbox)return;
-    const all=Object.values(ids).map(id=>document.getElementById(id));
+    const all=keys.map(k=>document.getElementById(ids[k]));
     if(!all.some(el=>el?.checked)){checkbox.checked=true;showToast('Хотя бы один фактор должен оставаться включённым');return;}
-    const weightId=`fscoreCustom${key[0].toUpperCase()+key.slice(1)}Weight`;
-    const weightInput=document.getElementById(weightId); if(weightInput)weightInput.disabled=!checkbox.checked;
+    const weightIds=Object.fromEntries(keys.map(k=>[k,`fscoreCustom${k[0].toUpperCase()+k.slice(1)}Weight`]));
+    const inputs=Object.fromEntries(keys.map(k=>[k,document.getElementById(weightIds[k])]));
+    const read=()=>Object.fromEntries(keys.map(k=>[k,Math.max(0,Math.min(100,Number(inputs[k]?.value)||0))]));
+    const weights=read();
+    window.__fscoreFactorSnapshots=window.__fscoreFactorSnapshots||{};
+    if(!checkbox.checked){
+        // Remember the exact pre-toggle state so re-enabling can restore it.
+        window.__fscoreFactorSnapshots[key]={...weights};
+        const others=keys.filter(k=>k!==key&&document.getElementById(ids[k])?.checked);
+        const removed=weights[key], sum=others.reduce((s,k)=>s+weights[k],0);
+        let used=0;
+        others.forEach((k,i)=>{
+            const input=inputs[k]; if(!input)return;
+            if(i===others.length-1) input.value=100-used;
+            else {
+                const value=sum>0?Math.round((weights[k]+removed*weights[k]/sum)):Math.round((100-removed)/others.length);
+                input.value=Math.max(0,value); used+=input.value;
+            }
+        });
+    }else{
+        const snapshot=window.__fscoreFactorSnapshots[key];
+        if(snapshot && keys.every(k=>Number.isFinite(Number(snapshot[k])))){
+            keys.forEach(k=>{if(inputs[k])inputs[k].value=Math.max(0,Math.min(100,Number(snapshot[k])||0));});
+        }else{
+            // No snapshot: give the newly enabled factor its current stored
+            // weight and take that amount proportionally from active factors.
+            const desired=weights[key];
+            const others=keys.filter(k=>k!==key&&document.getElementById(ids[k])?.checked);
+            const sum=others.reduce((s,k)=>s+weights[k],0);
+            inputs[key].value=Math.min(100,desired);
+            const remaining=100-Math.min(100,desired);
+            let used=0;
+            others.forEach((k,i)=>{
+                if(i===others.length-1) inputs[k].value=remaining-used;
+                else {const value=sum>0?Math.round(remaining*weights[k]/sum):Math.round(remaining/others.length);inputs[k].value=value;used+=value;}
+            });
+        }
+        delete window.__fscoreFactorSnapshots[key];
+    }
+    const weightInput=inputs[key]; if(weightInput)weightInput.disabled=!checkbox.checked;
     updateFScoreWeightTotal(); updateFScoreLiveIndexUI();
 }
 function rebalanceFScoreTrainingWeights(changedKey){
@@ -1267,7 +1346,7 @@ function saveFScoreCustomFromUI(){
     document.querySelectorAll('#fscoreCustomTargets .fscore-target-card').forEach(row=>{const key=row.dataset.key,enabled=!!row.querySelector('.fscore-target-enabled')?.checked;if(!key)return;const direction=row.querySelector('.fscore-target-direction')?.value||'maintain',targetInputs=[...row.querySelectorAll('.fscore-target-value')],targetInput=targetInputs.find(i=>!i.closest('.hidden'))||targetInputs[0],target=Number(targetInput?.value),tolInputs=[...row.querySelectorAll('.fscore-target-tolerance')],tolInput=tolInputs.find(i=>i.type!=='hidden')||tolInputs[0],tolerance=Math.max(0,Number(tolInput?.value)||0);targets[key]={direction,target:(Number.isFinite(target)&&target>0)?target:'',tolerance,enabled};});
     if(!Object.keys(targets).length){showToast('Добавьте хотя бы один параметр тела');return;}
     if(!Object.values(targets).some(t=>t.enabled!==false)){showToast('Включите хотя бы один параметр для расчёта Индекса');return;}
-    const body=Math.max(0,Math.min(100,Number(document.getElementById('fscoreCustomBodyWeight')?.value)||0)),training=Math.max(0,Math.min(100,Number(document.getElementById('fscoreCustomTrainingWeight')?.value)||0)),nutritionWeight=Math.max(0,Math.min(100,Number(document.getElementById('fscoreCustomNutritionWeight')?.value)||0)); const blockEnabled={body:!!document.getElementById('fscoreCustomBodyEnabled')?.checked,training:!!document.getElementById('fscoreCustomTrainingEnabled')?.checked,nutrition:!!document.getElementById('fscoreCustomNutritionEnabled')?.checked}; if(!Object.values(blockEnabled).some(Boolean)){showToast('Включите хотя бы один фактор Индекса');return;} const bw={body,training,nutrition:nutritionWeight}; if(!Object.keys(blockEnabled).some(k=>blockEnabled[k]&&bw[k]>0)){showToast('Укажите вес хотя бы одного включённого фактора');return;}
+    const rawBlockWeights={body:Math.max(0,Math.min(100,Number(document.getElementById('fscoreCustomBodyWeight')?.value)||0)),training:Math.max(0,Math.min(100,Number(document.getElementById('fscoreCustomTrainingWeight')?.value)||0)),nutrition:Math.max(0,Math.min(100,Number(document.getElementById('fscoreCustomNutritionWeight')?.value)||0))}; const blockEnabled={body:!!document.getElementById('fscoreCustomBodyEnabled')?.checked,training:!!document.getElementById('fscoreCustomTrainingEnabled')?.checked,nutrition:!!document.getElementById('fscoreCustomNutritionEnabled')?.checked}; if(!Object.values(blockEnabled).some(Boolean)){showToast('Включите хотя бы один фактор Индекса');return;} const bw=normalizeFScoreBlockWeights(rawBlockWeights,blockEnabled); if(!Object.keys(blockEnabled).some(k=>blockEnabled[k]&&bw[k]>0)){showToast('Укажите вес хотя бы одного включённого фактора');return;}
     const trainingTarget=Math.max(1,Math.min(7,Number(document.getElementById('fscoreCustomTrainingTarget')?.value)||3)),trainingPeriod=Math.max(7,Math.min(365,Number(document.getElementById('fscoreCustomTrainingPeriod')?.value)||30)),trainingWeights={systemity:Math.max(0,Number(document.getElementById('fscoreCustomTrainingSystemityWeight')?.value)||0),strength:Math.max(0,Number(document.getElementById('fscoreCustomTrainingStrengthWeight')?.value)||0)},trainingWeightSum=Object.values(trainingWeights).reduce((a,b)=>a+b,0); if(trainingWeightSum<=0){showToast('Укажите вес хотя бы для одного показателя тренировки');return;} Object.keys(trainingWeights).forEach(k=>trainingWeights[k]=Math.round(trainingWeights[k]/trainingWeightSum*100)); trainingWeights.strength+=(100-Object.values(trainingWeights).reduce((a,b)=>a+b,0)); const evaluationDays=Math.max(7,Math.min(365,Number(document.getElementById('fscoreCustomEvaluationDays')?.value)||90));
     const nutrition={auto:document.getElementById('fscoreCustomNutritionAuto')?.value!=='manual',calories:Math.max(0,Number(document.getElementById('fscoreCustomCalories')?.value)||0),protein:Math.max(0,Number(document.getElementById('fscoreCustomProtein')?.value)||0),fat:Math.max(0,Number(document.getElementById('fscoreCustomFat')?.value)||0),carbs:Math.max(0,Number(document.getElementById('fscoreCustomCarbs')?.value)||0),toleranceCalories:Math.max(0,Number(document.getElementById('fscoreCustomCalTol')?.value)||0),toleranceProtein:Math.max(0,Number(document.getElementById('fscoreCustomProteinTol')?.value)||0),toleranceFat:Math.max(0,Number(document.getElementById('fscoreCustomFatTol')?.value)||0),toleranceCarbs:Math.max(0,Number(document.getElementById('fscoreCustomCarbsTol')?.value)||0)};
     if(!nutrition.auto && !(nutrition.calories||nutrition.protein||nutrition.fat||nutrition.carbs)){showToast('Для ручного режима задайте хотя бы одну цель КБЖУ');return;}
@@ -1703,7 +1782,7 @@ function renderFScoreCustomEditorMarkup(){
       <div class="fscore-editor-hero"><div class="fscore-editor-icon">🎯</div><div><strong>${escapeHtml(c.name||'Новая цель')}</strong><span>Настройте цель, период и показатели, которые должны влиять на Индекс динамики.</span></div></div>
       <div class="fscore-custom-grid"><label><span>Название цели</span><input id="fscoreCustomName" value="${escapeHtml(c.name||'')}" maxlength="40" placeholder="Например: Рекомпозиция"></label><label><span>Стратегия</span><select id="fscoreCustomMode" onchange="updateFScoreCustomModeInfo()"><option value="gain" ${c.mode==='gain'?'selected':''}>💪 Набор</option><option value="cut" ${c.mode==='cut'?'selected':''}>🔥 Снижение</option><option value="maintain" ${c.mode==='maintain'?'selected':''}>⚖️ Стабильность</option></select></label></div><div id="fscoreCustomModeInfo" class="fscore-mode-info" aria-live="polite"></div>
       <section class="fscore-evaluation-field"><div class="fscore-field-heading"><b>Период оценки</b><span>От него начинается расчёт вашей цели</span></div><div class="fscore-period-presets"><button type="button" class="fscore-period-preset ${Number(c.evaluationDays)===30?'active':''}" data-days="30" onclick="setFScorePeriodPreset(30)">30 дней</button><button type="button" class="fscore-period-preset ${Number(c.evaluationDays)===60?'active':''}" data-days="60" onclick="setFScorePeriodPreset(60)">60 дней</button><button type="button" class="fscore-period-preset ${Number(c.evaluationDays)===90?'active':''}" data-days="90" onclick="setFScorePeriodPreset(90)">90 дней</button><button type="button" class="fscore-period-preset ${Number(c.evaluationDays)===180?'active':''}" data-days="180" onclick="setFScorePeriodPreset(180)">180 дней</button><button type="button" class="fscore-period-custom-btn" onclick="setFScoreCustomPeriodMode('custom')">Свой</button></div><input id="fscoreCustomPeriodMode" type="hidden" value="preset"><div id="fscoreCustomPeriodInputWrap" class="hidden"><input id="fscoreCustomEvaluationDays" type="number" min="7" max="365" value="${c.evaluationDays}" oninput="updateFScoreEvaluationDaysFromUI()"><small>дней</small></div></section>
-      <section class="fscore-custom-section fscore-factor-weight-section"><div class="fscore-factor-weight-heading"><div><b>Факторы Индекса</b><span>Включите нужные блоки и задайте их относительный вес. Сумма автоматически нормализуется до 100%.</span></div><strong id="fscoreCustomWeightTotal">Нормировано до 100%</strong></div><div class="fscore-custom-weights"><label><span><input id="fscoreCustomBodyEnabled" type="checkbox" ${c.blockEnabled?.body!==false?'checked':''} onchange="toggleFScoreFactor('body')"> Тело</span><input id="fscoreCustomBodyWeight" type="number" min="0" max="100" value="${c.blockWeights?.body??40}" oninput="rebalanceFScoreWeights('body')" ${c.blockEnabled?.body===false?'disabled':''}><em>вес</em></label><label><span><input id="fscoreCustomTrainingEnabled" type="checkbox" ${c.blockEnabled?.training!==false?'checked':''} onchange="toggleFScoreFactor('training')"> Тренировки</span><input id="fscoreCustomTrainingWeight" type="number" min="0" max="100" value="${c.blockWeights?.training??30}" oninput="rebalanceFScoreWeights('training')" ${c.blockEnabled?.training===false?'disabled':''}><em>вес</em></label><label><span><input id="fscoreCustomNutritionEnabled" type="checkbox" ${c.blockEnabled?.nutrition!==false?'checked':''} onchange="toggleFScoreFactor('nutrition')"> Питание</span><input id="fscoreCustomNutritionWeight" type="number" min="0" max="100" value="${c.blockWeights?.nutrition??30}" oninput="rebalanceFScoreWeights('nutrition')" ${c.blockEnabled?.nutrition===false?'disabled':''}><em>вес</em></label></div></section>
+      <section class="fscore-custom-section fscore-factor-weight-section"><div class="fscore-factor-weight-heading"><div><b>Факторы Индекса</b><span>Включите нужные блоки. Изменяемый вес фиксируется, остальные активные веса перераспределяются до 100%.</span></div><strong id="fscoreCustomWeightTotal">Нормировано до 100%</strong></div><div class="fscore-custom-weights"><label><span><input id="fscoreCustomBodyEnabled" type="checkbox" ${c.blockEnabled?.body!==false?'checked':''} onchange="toggleFScoreFactor('body')"> Тело</span><input id="fscoreCustomBodyWeight" type="number" min="0" max="100" value="${c.blockWeights?.body??40}" oninput="rebalanceFScoreWeights('body')" ${c.blockEnabled?.body===false?'disabled':''}><em>вес</em></label><label><span><input id="fscoreCustomTrainingEnabled" type="checkbox" ${c.blockEnabled?.training!==false?'checked':''} onchange="toggleFScoreFactor('training')"> Тренировки</span><input id="fscoreCustomTrainingWeight" type="number" min="0" max="100" value="${c.blockWeights?.training??30}" oninput="rebalanceFScoreWeights('training')" ${c.blockEnabled?.training===false?'disabled':''}><em>вес</em></label><label><span><input id="fscoreCustomNutritionEnabled" type="checkbox" ${c.blockEnabled?.nutrition!==false?'checked':''} onchange="toggleFScoreFactor('nutrition')"> Питание</span><input id="fscoreCustomNutritionWeight" type="number" min="0" max="100" value="${c.blockWeights?.nutrition??30}" oninput="rebalanceFScoreWeights('nutrition')" ${c.blockEnabled?.nutrition===false?'disabled':''}><em>вес</em></label></div></section>
       <details class="fscore-custom-section fscore-targets-section" aria-label="Параметры тела"><summary><span>📏 Параметры тела</span><small>${activeTargetCount} из ${fields.length} учитываются</small></summary><div class="fscore-target-intro"><div class="fscore-target-count" id="fscoreTargetCount">Учитываются: ${activeTargetCount} из ${fields.length}</div></div><div class="fscore-target-rules"><span><b>Рост</b> — выше текущего</span><span><b>Снижение</b> — ниже</span><span><b>Стабильность</b> — в допустимом коридоре</span></div><div id="fscoreCustomTargets" class="fscore-custom-targets">${rows}</div><button type="button" class="fscore-inactive-toggle" aria-expanded="true" onclick="toggleFScoreInactiveTargets(this)">Скрыть неактивные параметры${inactiveTargetCount?` · ${inactiveTargetCount}`:''}</button></details>
       <details class="fscore-custom-section fscore-training-section"><summary><span>🏋️ Тренировки</span><small>Системность и силовая динамика</small></summary><div class="fscore-custom-training"><label>Тренировок в неделю<input id="fscoreCustomTrainingTarget" type="number" min="1" max="7" step="0.5" value="${c.training?.target||3}"></label><label>Период системности, дней<input id="fscoreCustomTrainingPeriod" type="number" min="7" max="365" value="${Math.min(Number(c.evaluationDays)||90,Number(c.training?.period)||30)}"></label></div><div class="fscore-training-weight-editor"><div class="fscore-training-weight-head"><span>Вес показателей</span><b id="fscoreCustomTrainingWeightTotal">${(Number(c.training?.weights?.systemity??40)+Number(c.training?.weights?.strength??60))}%</b></div><div class="fscore-training-weight-grid"><label>Системность<input id="fscoreCustomTrainingSystemityWeight" type="number" min="0" max="100" value="${c.training?.weights?.systemity??40}" oninput="rebalanceFScoreTrainingWeights('systemity')"></label><label>Силовая динамика<input id="fscoreCustomTrainingStrengthWeight" type="number" min="0" max="100" value="${c.training?.weights?.strength??60}" oninput="rebalanceFScoreTrainingWeights('strength')"></label></div></div></details>
       <details class="fscore-custom-section fscore-nutrition-section"><summary><span>🍽️ Питание</span><small>Автоматические или ручные цели КБЖУ</small></summary><select id="fscoreCustomNutritionAuto" onchange="toggleFScoreNutritionMode()"><option value="auto" ${c.nutrition?.auto!==false?'selected':''}>Автоматически</option><option value="manual" ${c.nutrition?.auto===false?'selected':''}>Вручную</option></select><div class="fscore-manual-nutrition ${c.nutrition?.auto===false?'':'hidden'}"><div class="fscore-nutrition-default-note">Допуск: ±10% от цели.</div><div class="fscore-custom-kbju"><label>Ккал<input id="fscoreCustomCalories" type="number" value="${c.nutrition?.calories||getGoalNutritionProfile(c.mode||'maintain').calories}"></label><label>Белок<input id="fscoreCustomProtein" type="number" value="${c.nutrition?.protein||getGoalNutritionProfile(c.mode||'maintain').protein}"></label><label>Жиры<input id="fscoreCustomFat" type="number" value="${c.nutrition?.fat||getGoalNutritionProfile(c.mode||'maintain').fat}"></label><label>Углеводы<input id="fscoreCustomCarbs" type="number" value="${c.nutrition?.carbs||getGoalNutritionProfile(c.mode||'maintain').carbs}"></label></div></div></details>
@@ -6449,7 +6528,7 @@ function showToast(msg) {
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1.8.59', {updateViaCache:'none'})
+        navigator.serviceWorker.register('./sw.js?v=1.8.61', {updateViaCache:'none'})
             .then(reg => console.log('SW registered', reg.scope))
             .catch(err => console.log('SW failed', err));
     });
@@ -11350,7 +11429,7 @@ async function clearTemporaryFiles(){
     if(typeof showToast==='function') showToast('Все данные приложения очищены. Перезапуск…');
     setTimeout(()=>{
       // Force the current clean app shell to initialise data from defaults.
-      location.replace(location.pathname+'?v=1.8.59&reset='+Date.now());
+      location.replace(location.pathname+'?v=1.8.61&reset='+Date.now());
     },250);
   }catch(err){
     console.error('Full application reset failed',err);

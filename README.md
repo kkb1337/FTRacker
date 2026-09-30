@@ -1,12 +1,18 @@
-# FTracker v1.8.59 — Nutrition Coverage & Custom Index Factors
+# FTracker v1.8.61 — Custom Index factor weight fix
 
-## v1.8.59 — Nutrition coverage & custom Index factors (30.09.2026)
+## v1.8.61 — Custom Index factor weights (30.09.2026)
+- Enabled Index factors are always normalized to exactly 100%.
+- Disabling a factor redistributes its share proportionally across the remaining enabled factors.
+- Editing one enabled factor automatically rebalances the other enabled factors.
+- Custom-goal weights are normalized on load and save, preventing invalid totals from being stored.
+
+## v1.8.61 — Nutrition coverage & custom Index factors (30.09.2026)
 
 - Дни питания учитываются в Индексе только при заполнении не менее 70% целевой калорийности; минимум 3 подходящих дня для активации блока сохраняется.
 - В «Своей цели» добавлены переключатели факторов «Тело», «Тренировки» и «Питание». Отключённые факторы полностью исключены из расчёта и оценки качества данных.
 - Веса активных факторов автоматически нормализуются до 100%; нельзя отключить все факторы или оставить нулевые веса у всех включённых факторов.
 - Старые пользовательские цели совместимы: все факторы по умолчанию остаются включёнными.
-- Service Worker, cache name, manifest, query-version и видимая версия обновлены до v1.8.59 от 30.09.26.
+- Service Worker, cache name, manifest, query-version и видимая версия обновлены до v1.8.61 от 30.09.26.
 
 ## v1.8.57 — Workout logic audit fixes (29.09.2026)
 - Верхний прогресс тренировки считает только обязательные единицы: 3 силовых подхода, 1 кардио-результат или 1 результат упражнения на повторения. Дополнительные подходы не увеличивают знаменатель.
