@@ -1,4 +1,4 @@
-const APP_VERSION = '1.8.61';
+const APP_VERSION = '1.8.70';
 const CACHE_NAME = `ftracker-${APP_VERSION}-offline-shell`;
 const OFFLINE_FALLBACK = './index.html';
 

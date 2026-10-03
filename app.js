@@ -1,4 +1,4 @@
-/* FTracker v1.8.61 — Workout replacement/create state fix.
+/* FTracker v1.8.70 — Workout replacement/create state fix.
    Consolidated from the audited inline runtimes without changing their order. */
 
 /* ===== CONSOLIDATED RUNTIME BLOCK 1 ===== */
@@ -256,6 +256,7 @@ let data = {
     productCatalog: BUILTIN_PRODUCT_CATALOG.map(p=>({...p})),
     exerciseDirectory: [],
     exerciseDirectoryHidden: [],
+    exerciseNotes: {},
     fscoreGoal: 'cut',
     fscoreCustomGoals: [],
     fscoreActiveCustomGoalId: null
@@ -391,6 +392,13 @@ function migrateFTrackerState(state){
     if(!Array.isArray(state.exerciseDirectory)) state.exerciseDirectory=[];
     if(!Array.isArray(state.exerciseDirectoryArchived)) state.exerciseDirectoryArchived=[];
     if(!Array.isArray(state.exerciseDirectoryHidden)) state.exerciseDirectoryHidden=[];
+    if(!state.exerciseNotes || typeof state.exerciseNotes!=='object' || Array.isArray(state.exerciseNotes)) state.exerciseNotes={};
+    try{
+      const mirroredNotes=JSON.parse(localStorage.getItem('ftracker_exercise_notes_v1')||'null');
+      if(mirroredNotes && typeof mirroredNotes==='object' && !Array.isArray(mirroredNotes)){
+        Object.keys(mirroredNotes).forEach(k=>{ if(mirroredNotes[k] && !state.exerciseNotes[k]) state.exerciseNotes[k]=String(mirroredNotes[k]); });
+      }
+    }catch(e){}
     if(!state.exerciseGuideOverrides || typeof state.exerciseGuideOverrides!=='object') state.exerciseGuideOverrides={};
     if(!state.exerciseAliases || typeof state.exerciseAliases!=='object') state.exerciseAliases={};
     if(!state.programAliases || typeof state.programAliases!=='object') state.programAliases={};
@@ -2488,13 +2496,13 @@ function getExerciseTypeByName(name){
 }
 function getExerciseSeries(name, history){
     const fallbackType=getExerciseTypeByName(name), rows=[];
-    (history||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(entry=>{
-        const ex=(entry.exercises||[]).find(x=>x.name===name); if(!ex) return;
+    (history||[]).map((entry,historyIndex)=>({entry,historyIndex})).slice().sort((a,b)=>new Date(a.entry.date)-new Date(b.entry.date)).forEach(({entry,historyIndex})=>{
+        const ex=(entry.exercises||[]).find(x=>normalizeExerciseKey(x?.name)===normalizeExerciseKey(name)); if(!ex) return;
         const type=ex.type||fallbackType;
         const sets=ex.sets||[]; if(!sets.length) return;
         let maxWeight=0,maxReps=0,volume=0,maxTime=0,maxIntensity=0,e1rm=0;
         sets.forEach(set=>{
-            const w=parseFloat(set.weight)||0, r=parseInt(set.reps)||0, t=parseFloat(set.time)||0, intensity=parseFloat(set.intensity)||0;
+            const w=parseWorkoutNumber(set.weight)||0, r=parseInt(set.reps)||0, t=parseWorkoutNumber(set.time)||0, intensity=parseWorkoutNumber(set.intensity)||0;
             maxWeight=Math.max(maxWeight,w); maxReps=Math.max(maxReps,r); volume+=w*r;
             // Conservative e1RM signal: use the reliable 1–12 rep range.
             // Higher-rep sets remain useful for volume, but are not allowed to
@@ -2502,7 +2510,7 @@ function getExerciseSeries(name, history){
             if(w>0&&r>0&&r<=12) e1rm=Math.max(e1rm,w*(1+r/30));
             maxTime=Math.max(maxTime,t); maxIntensity=Math.max(maxIntensity,intensity);
         });
-        rows.push({date:new Date(entry.date),weight:maxWeight,reps:maxReps,volume,e1rm,maxTime,maxIntensity,type});
+        rows.push({date:new Date(entry.date),historyIndex,weight:maxWeight,reps:maxReps,volume,e1rm,maxTime,maxIntensity,type});
     });
     return rows;
 }
@@ -2510,7 +2518,7 @@ function getExerciseRecordData(name){
     const type=getExerciseTypeByName(name), entries=(data.history||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
     if(type==='strength'){
         const sets=[];
-        entries.forEach(entry=>getStrengthSetsForExerciseInEntry(entry,name).forEach(s=>sets.push({weight:Number(s.weight),reps:Number(s.reps),date:entry.date})));
+        entries.forEach(entry=>getStrengthSetsForExerciseInEntry(entry,name).forEach(s=>sets.push({weight:parseWorkoutNumber(s.weight),reps:parseWorkoutNumber(s.reps),date:entry.date})));
         if(!sets.length) return {type,metrics:[['Лучший вес','—'],['Лучшие повторы','—'],['Рабочий вес','—'],['Тренировок','—']]};
         let bestWeight=Math.max(...sets.map(x=>x.weight));
         let bestWeightReps=Math.max(...sets.filter(x=>x.weight===bestWeight).map(x=>x.reps));
@@ -3174,7 +3182,7 @@ function switchExerciseModalTab(tab){
         const hero=type==='strength'&&working?`<div class="analytics-hero"><div><span>Рабочий вес</span><b>${formatNum(working.weight)} кг</b><small>${formatNum(working.reps)} повторов · ${working.sets} подхода</small></div><div class="analytics-hero-badge">Актуально</div></div>`:'';
         const html=hero+(all.length?`<div class="analytics-section-title">Последние тренировки</div>`+all.slice().reverse().map(r=>{
             let main=''; if(type==='strength')main=`${formatKg(r.weight)} × ${formatNum(r.reps)} повт.`; else if(type==='cardio')main=`${formatNum(r.maxTime)} мин · инт. ${formatNum(r.maxIntensity)}`; else main=`${formatNum(r.reps)} повторов`;
-            return `<div class="analytics-history-row"><div><strong>${r.date.toLocaleDateString('ru-RU',{day:'2-digit',month:'short'})}</strong><span>${main}</span></div><i>›</i></div>`;
+            return `<div class="analytics-history-row analytics-history-row-clickable" data-exercise-history-index="${Number(r.historyIndex)}" data-exercise-history-name="${escapeHtml(name)}" role="button" tabindex="0" aria-label="Открыть результат упражнения"><div><strong>${r.date.toLocaleDateString('ru-RU',{day:'2-digit',month:'short'})}</strong><span>${main}</span></div><i>›</i></div>`;
         }).join(''):'<div class="progress-empty">Истории пока нет</div>');
         document.getElementById('tabHistory').innerHTML=html;
     }else if(tab==='records'){
@@ -3922,6 +3930,13 @@ function formatPreviousSetResult(set, exerciseName){
 
 
 
+function parseWorkoutNumber(value){
+    if(value===null || value===undefined) return NaN;
+    const normalized=String(value).trim().replace(/\s+/g,'').replace(',', '.');
+    if(!normalized) return NaN;
+    return Number(normalized);
+}
+
 function getStrengthSetsForExerciseInEntry(entry, exerciseName){
     const ex=(entry?.exercises||[]).find(x=>x && normalizeExerciseKey(x.name)===normalizeExerciseKey(exerciseName));
     // Historical type wins over the current catalog type. This prevents an
@@ -3929,14 +3944,14 @@ function getStrengthSetsForExerciseInEntry(entry, exerciseName){
     // the exercise was changed in the catalog. Legacy entries without a type
     // retain the existing name-based fallback.
     if(ex?.type && ex.type!=='strength') return [];
-    return (ex?.sets||[]).filter(s=>Number(s.weight)>0 && Number(s.reps)>0);
+    return (ex?.sets||[]).filter(s=>parseWorkoutNumber(s.weight)>0 && parseWorkoutNumber(s.reps)>0);
 }
 function getWorkingResultFromEntry(entry, exerciseName){
     const sets=getStrengthSetsForExerciseInEntry(entry,exerciseName);
     if(!sets.length) return null;
     const byWeight=new Map();
     sets.forEach(s=>{
-        const w=Number(s.weight), r=Number(s.reps);
+        const w=parseWorkoutNumber(s.weight), r=parseWorkoutNumber(s.reps);
         if(r>=6){ if(!byWeight.has(w)) byWeight.set(w,[]); byWeight.get(w).push(r); }
     });
     const qualified=[...byWeight.entries()].filter(([,rs])=>rs.length>=3).sort((a,b)=>b[0]-a[0]);
@@ -4112,6 +4127,8 @@ function getWorkoutExerciseDirectoryEntry(exerciseName, type='strength'){
     return entry || null;
 }
 function getWorkoutExerciseNote(exerciseName, type='strength'){
+    const key=normalizeExerciseKey(exerciseName);
+    if(key && data.exerciseNotes && Object.prototype.hasOwnProperty.call(data.exerciseNotes,key)) return String(data.exerciseNotes[key] ?? '');
     const entry=getWorkoutExerciseDirectoryEntry(exerciseName,type);
     return String(entry?.note ?? '');
 }
@@ -4141,7 +4158,23 @@ function saveWorkoutExerciseNote(){
     if(!name) return;
     const entry=getWorkoutExerciseDirectoryEntry(name,type);
     if(!entry) return;
-    entry.note=String(input.value||'').trim();
+    const note=String(input.value||'').trim();
+    if(!data.exerciseNotes || typeof data.exerciseNotes!=='object' || Array.isArray(data.exerciseNotes)) data.exerciseNotes={};
+    const key=normalizeExerciseKey(name);
+    if(key){
+        if(note) data.exerciseNotes[key]=note;
+        else delete data.exerciseNotes[key];
+        // Keep a small dedicated mirror as an additional PWA durability layer.
+        // The canonical backup value remains data.exerciseNotes, so this does not
+        // create a second source of truth.
+        try{
+            const stored=JSON.parse(localStorage.getItem('ftracker_exercise_notes_v1')||'{}');
+            if(note) stored[key]=note; else delete stored[key];
+            localStorage.setItem('ftracker_exercise_notes_v1',JSON.stringify(stored));
+        }catch(e){}
+    }
+    // Keep the directory record mirrored for older backups and screens that read it directly.
+    entry.note=note;
     saveData();
     closeWorkoutExerciseNote();
     renderExercise();
@@ -4222,13 +4255,12 @@ function renderExerciseBase() {
       </div>
       <section class="workout-completion">
         <div class="workout-completion-head"><div><b>ВЫПОЛНЕНО</b><strong>${completedSets}/${target}</strong><span>подходов</span></div></div>
-        <div class="completion-track">${bars}</div>
+        <div class="completion-track ${target===1?'single':''}">${bars}</div>
       </section>
       ${recommendationHtml}
       <div class="sets-heading"><span>ПОДХОДЫ</span></div>
       <div id="setsList">${setsHTML}</div>
-      <div id="restTimerContainer" class="rest-panel hidden"><div class="rest-label">Время отдыха</div><div class="rest-control-row"><button class="rest-adjust-circle" onclick="adjustRestTime(-30)">−30с</button><div class="rest-time" id="timerDisplay">02:00</div><button class="rest-adjust-circle" onclick="adjustRestTime(30)">+30с</button></div><button class="rest-skip" onclick="stopRestTimer()">Пропустить отдых</button></div>
-      <div class="workout-bottom-actions">
+      <div id="restTimerContainer" class="rest-panel hidden" aria-label="Таймер отдыха"><div class="rest-progress-ring" aria-hidden="true"><span id="timerDisplay">02:00</span></div><div class="rest-actions"><button type="button" class="rest-adjust-circle" onclick="adjustRestTime(-30)" aria-label="Уменьшить отдых на 30 секунд">−30</button><button type="button" class="rest-adjust-circle" onclick="adjustRestTime(30)" aria-label="Увеличить отдых на 30 секунд">+30</button><button type="button" class="rest-skip" onclick="stopRestTimer()">Пропустить отдых</button></div></div><div class="workout-bottom-actions">
         <button type="button" class="workout-bottom-action add-action" data-workout-anchor="add-set" onclick="addSet()" aria-label="Добавить подход"><span class="nav-icon">＋</span><span class="nav-label">Добавить<br>подход</span></button>
         <button type="button" class="workout-bottom-action next-action" data-workout-anchor="next-exercise" onclick="${isLastExercise?'confirmFinishWorkout()':'nextExercise()'}" aria-label="${isLastExercise?'Завершить тренировку':'Следующее упражнение'}"><span class="nav-icon">${isLastExercise?'✓':'→'}</span><span class="nav-label">${isLastExercise?'Завершить<br>тренировку':'Следующее<br>упражнение'}</span></button>
       </div>
@@ -4317,6 +4349,11 @@ function addSet() {
     workoutSets[realIdx].push(newSet);
     saveDraft();
 
+    // Отдых запускается именно по нажатию «Добавить подход».
+    // Первый подход — без отдыха; каждый следующий добавленный подход —
+    // с текущей длительностью отдыха.
+    if(setIndex > 0) startRestTimer(lastRestDuration);
+
     // Fast path: append only the new row. Rebuilding the complete exercise card
     // on every added set caused avoidable layout/paint work in iOS PWA.
     const list=document.getElementById('setsList');
@@ -4343,9 +4380,6 @@ function updateSet(exIdx, setIdx, field, value) {
     const isComplete = isWorkoutSetFilledForResult(set,type);
     if (!wasComplete && isComplete) {
         checkPersonalRecord(exIdx,setIdx);
-        startRestTimer(lastRestDuration);
-    } else if (wasComplete && !isComplete) {
-        stopRestTimer();
     }
     saveDraft();
     updateWorkoutCompletionUI();
@@ -4443,8 +4477,7 @@ function updateRestTimerDisplay(){
     const remaining=Math.max(0,Math.ceil((restEndTime-Date.now())/1000));
     const display=document.getElementById('timerDisplay'); const container=document.getElementById('restTimerContainer');
     if(!display||!container) return;
-    display.textContent=formatTime(remaining);
-    if(remaining<=10) container.classList.add('warning'); else container.classList.remove('warning');
+    display.textContent=formatTime(remaining); const total=Math.max(1,Number(lastRestDuration)||120); const progress=Math.max(0,Math.min(100,(remaining/total)*100)); container.style.setProperty('--rest-progress', progress+'%'); if(remaining<=10) container.classList.add('warning'); else container.classList.remove('warning');
     if(remaining<=0){ stopRestTimer(); if(navigator.vibrate) navigator.vibrate(200); }
 }
 function addRestTime(){ if(restEndTime){ restEndTime+=30000; updateRestTimerDisplay(); } }
@@ -4457,7 +4490,16 @@ function exitWorkoutWithoutSaving() { closeConfirmExit(); stopRestTimer(); stopT
 
 function isWorkoutSetFilledForResult(set,type='strength'){
     if(!set || typeof set!=='object') return false;
-    const positive=v=>Number.isFinite(Number(v)) && Number(v)>0;
+    // iPhone/RU keyboard can return decimal values with a comma (27,5).
+    // Normalize both comma and dot before validation so decimal weights are
+    // treated exactly like integer weights.
+    const toNumeric=v=>{
+        if(v===null || v===undefined) return NaN;
+        const normalized=String(v).trim().replace(/\s+/g,'').replace(',', '.');
+        if(!normalized) return NaN;
+        return Number(normalized);
+    };
+    const positive=v=>Number.isFinite(toNumeric(v)) && toNumeric(v)>0;
     if(type==='cardio') return positive(set.time) && positive(set.intensity);
     if(type==='bodyweight') return positive(set.reps);
     // Силовой подход считается результатом только при заполнении ОБОИХ полей.
@@ -6528,7 +6570,7 @@ function showToast(msg) {
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1.8.61', {updateViaCache:'none'})
+        navigator.serviceWorker.register('./sw.js?v=1.8.70', {updateViaCache:'none'})
             .then(reg => console.log('SW registered', reg.scope))
             .catch(err => console.log('SW failed', err));
     });
@@ -6696,7 +6738,17 @@ function renderProgressDashboard(){
             if(type==='strength') main=`${formatKg(r.weight)} × ${formatNum(r.reps)} повт.`;
             else if(type==='cardio') main=`${formatNum(r.maxTime)} мин · интенсивность ${formatNum(r.maxIntensity)}`;
             else main=`${formatNum(r.reps)} повторов`;
-            return `<div class="progress-ex-history-row"><span class="progress-ex-history-date">${r.date.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'})}</span><span class="progress-ex-history-value">${main}${type==='strength'?`<small>Объём ${formatKg(r.volume)}</small>`:''}</span></div>`;
+            const historyEntryIndex=(data.history||[]).findIndex(h=>{
+                if(!h || !Array.isArray(h.exercises)) return false;
+                const sameDate=new Date(h.date).getTime()===r.date.getTime();
+                return sameDate && h.exercises.some(ex=>normalizeExerciseKey(ex?.name)===normalizeExerciseKey(selected));
+            });
+            const clickable=historyEntryIndex>=0;
+            return `<button type="button" class="progress-ex-history-row ${clickable?'is-clickable':''}" ${clickable?`data-progress-history-index="${historyEntryIndex}" data-progress-history-exercise="${escapeHtml(selected)}" aria-label="Открыть тренировку ${r.date.toLocaleDateString('ru-RU')}"`:''}>
+                <span class="progress-ex-history-date">${r.date.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'})}</span>
+                <span class="progress-ex-history-value">${main}${type==='strength'?`<small>Объём ${formatKg(r.volume)}</small>`:''}</span>
+                ${clickable?'<span class="progress-history-chevron">›</span>':''}
+            </button>`;
         }).join('');
     } else historyHtml='<div class="progress-ex-no-results">За выбранный период данных нет</div>';
 
@@ -6726,6 +6778,64 @@ function renderProgressDashboard(){
     }
 }
 function setProgressMetric(key){ window.progressMetricKey=key; renderProgressDashboard(); }
+
+function viewProgressExerciseHistory(historyIndex, exerciseName){
+    const entry=data.history?.[Number(historyIndex)];
+    if(!entry) return;
+    const wanted=normalizeExerciseKey(exerciseName);
+    const ex=(entry.exercises||[]).find(item=>normalizeExerciseKey(item?.name)===wanted);
+    if(!ex) return;
+
+    const dateLabel=new Date(entry.date).toLocaleDateString();
+    const title=document.getElementById('workoutDetailTitle');
+    if(title) title.innerHTML=`<strong>${escapeHtml(ex.name)}</strong><span>${escapeHtml(entry.program||'Тренировка')} · ${dateLabel}</span>`;
+
+    let html='<div class="workout-history-detail-list"><section class="workout-history-exercise">';
+    html+=`<div class="workout-history-exercise-name">${escapeHtml(ex.name)}</div>`;
+    if(!ex.sets?.length){
+        html+='<div class="workout-history-empty">Нет данных</div>';
+    }else{
+        html+='<div class="workout-history-sets">';
+        ex.sets.forEach((s,i)=>{
+            const value=s.weight!=null && s.weight!=='' ? `${escapeHtml(s.weight)} кг × ${escapeHtml(s.reps??'')}` :
+                s.time!=null && s.time!=='' ? `${escapeHtml(s.time)} мин × ${escapeHtml(s.intensity??'')}` :
+                `${escapeHtml(s.reps??'')} повт.`;
+            html+=`<div class="workout-history-set"><span>Подход ${i+1}</span><b>${value}</b></div>`;
+        });
+        html+='</div>';
+    }
+    html+='</section></div>';
+    const content=document.getElementById('workoutDetailContent');
+    if(content) content.innerHTML=html;
+    lockModalScroll();
+    document.getElementById('workoutDetailModal')?.classList.remove('hidden');
+}
+
+let progressExerciseHistoryDelegationInstalled=false;
+function installProgressExerciseHistoryDelegation(){
+    if(progressExerciseHistoryDelegationInstalled) return;
+    progressExerciseHistoryDelegationInstalled=true;
+    document.addEventListener('click',function(e){
+        const row=e.target.closest?.('[data-progress-history-index],[data-exercise-history-index]');
+        if(!row) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const index=row.getAttribute('data-progress-history-index') ?? row.getAttribute('data-exercise-history-index');
+        const name=row.getAttribute('data-progress-history-exercise') || row.getAttribute('data-exercise-history-name') || '';
+        viewProgressExerciseHistory(index,name);
+    },false);
+    document.addEventListener('keydown',function(e){
+        if(e.key!=='Enter' && e.key!==' ') return;
+        const row=e.target.closest?.('[data-progress-history-index],[data-exercise-history-index]');
+        if(!row) return;
+        e.preventDefault();
+        const index=row.getAttribute('data-progress-history-index') ?? row.getAttribute('data-exercise-history-index');
+        const name=row.getAttribute('data-progress-history-exercise') || row.getAttribute('data-exercise-history-name') || '';
+        viewProgressExerciseHistory(index,name);
+    },false);
+}
+installProgressExerciseHistoryDelegation();
+
 
 
 /* ===== Program order: reliable position editor for iPhone/Yandex ===== */
@@ -11429,7 +11539,7 @@ async function clearTemporaryFiles(){
     if(typeof showToast==='function') showToast('Все данные приложения очищены. Перезапуск…');
     setTimeout(()=>{
       // Force the current clean app shell to initialise data from defaults.
-      location.replace(location.pathname+'?v=1.8.61&reset='+Date.now());
+      location.replace(location.pathname+'?v=1.8.70&reset='+Date.now());
     },250);
   }catch(err){
     console.error('Full application reset failed',err);

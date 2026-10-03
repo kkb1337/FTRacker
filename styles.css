@@ -12983,3 +12983,322 @@ body.light-mode .toast{
 .fscore-custom-weights input[type="checkbox"]{width:16px!important;height:16px!important;flex:0 0 16px;margin:0!important;padding:0!important;accent-color:var(--accent);}
 .fscore-custom-weights input[type="number"]:disabled{opacity:.42;cursor:not-allowed;}
 .fscore-factor-weight-heading strong{font-size:11px;white-space:nowrap;}
+
+/* Clickable exercise-history rows in Analytics */
+.progress-ex-history-row.is-clickable{
+    width:100%;
+    border:0;
+    color:var(--text);
+    font:inherit;
+    text-align:left;
+    cursor:pointer;
+    -webkit-appearance:none;
+    appearance:none;
+}
+.progress-ex-history-row.is-clickable:active{transform:scale(.99);}
+.progress-ex-history-row.is-clickable .progress-ex-history-value{margin-left:auto;}
+.progress-history-chevron{font-size:22px;line-height:1;color:var(--subtext);margin-left:2px;}
+
+/* v1.8.67 — canonical workout recommendation + compact rest timer. */
+#workoutScreen .workout-recommendation{
+  cursor:pointer!important;
+  margin:8px 0 11px!important;
+  padding:0!important;
+  border-radius:15px!important;
+  background:linear-gradient(135deg,rgba(52,199,89,.09),rgba(52,199,89,.035))!important;
+  border:1px solid rgba(52,199,89,.26)!important;
+  box-shadow:none!important;
+  overflow:hidden!important;
+}
+#workoutScreen .workout-recommendation.is-collapsed{
+  padding:0!important;
+}
+#workoutScreen .workout-recommendation.is-collapsed .recommendation-target,
+#workoutScreen .workout-recommendation.is-collapsed .recommendation-note{
+  display:none!important;
+}
+#workoutScreen .recommendation-head{
+  min-height:38px!important;
+  padding:7px 10px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:8px!important;
+  font-size:12px!important;
+  line-height:1.1!important;
+}
+#workoutScreen .recommendation-head > span:first-child{
+  min-width:0!important;
+  color:var(--subtext)!important;
+  font-weight:850!important;
+  letter-spacing:.04em!important;
+}
+#workoutScreen .recommendation-toggle{
+  flex:0 0 24px!important;
+  width:24px!important;height:24px!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  border-radius:8px!important;
+  background:rgba(52,199,89,.12)!important;
+  color:#62d26d!important;
+  font-size:15px!important;
+  line-height:1!important;
+}
+#workoutScreen .recommendation-target{
+  display:flex!important;
+  align-items:baseline!important;
+  justify-content:space-between!important;
+  gap:8px!important;
+  margin:0 10px!important;
+  padding:7px 9px!important;
+  border-radius:10px!important;
+  background:rgba(255,255,255,.035)!important;
+  border:1px solid rgba(52,199,89,.16)!important;
+}
+#workoutScreen .recommendation-target span{
+  font-size:9.5px!important;line-height:1!important;
+  color:var(--subtext)!important;font-weight:800!important;
+  text-transform:uppercase!important;letter-spacing:.04em!important;
+}
+#workoutScreen .recommendation-target b{
+  min-width:0!important;
+  font-size:14px!important;line-height:1.15!important;font-weight:850!important;
+  color:var(--text)!important;text-align:right!important;overflow-wrap:anywhere!important;
+}
+#workoutScreen .recommendation-note{
+  margin:5px 10px 9px!important;padding:0!important;
+  color:var(--subtext)!important;font-size:11px!important;line-height:1.28!important;
+  max-height:29px!important;overflow:hidden!important;
+}
+
+/* v1.8.68 — iOS/PWA rest timer: balanced width and native secondary-action proportions. */
+#workoutScreen .rest-panel{
+  --rest-progress:100%;
+  position:relative!important;
+  inset:auto!important;
+  z-index:2!important;
+  width:100%!important;
+  min-height:86px!important;
+  box-sizing:border-box!important;
+  margin:12px 0 10px!important;
+  padding:10px 12px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:stretch!important;
+  gap:12px!important;
+  border-radius:20px!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.018)),var(--card-bg)!important;
+  border:1px solid rgba(255,255,255,.075)!important;
+  box-shadow:0 5px 18px rgba(0,0,0,.12),inset 0 1px 0 rgba(255,255,255,.035)!important;
+  overflow:hidden!important;
+}
+#workoutScreen .rest-panel.hidden{display:none!important}
+#workoutScreen .rest-progress-ring{
+  position:relative!important;
+  flex:0 0 62px!important;
+  width:62px!important;
+  height:62px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:50%!important;
+  background:conic-gradient(#62d26d var(--rest-progress),rgba(255,255,255,.09) 0)!important;
+  box-shadow:0 0 0 1px rgba(98,210,109,.08)!important;
+}
+#workoutScreen .rest-progress-ring::before{
+  content:""!important;
+  position:absolute!important;
+  inset:4px!important;
+  border-radius:50%!important;
+  background:var(--card-bg)!important;
+}
+#workoutScreen .rest-progress-ring span{
+  position:relative!important;
+  z-index:1!important;
+  color:var(--text)!important;
+  font-size:14px!important;
+  font-weight:900!important;
+  line-height:1!important;
+  font-variant-numeric:tabular-nums!important;
+  letter-spacing:-.025em!important;
+}
+#workoutScreen .rest-actions{
+  flex:1 1 auto!important;
+  min-width:0!important;
+  display:grid!important;
+  grid-template-columns:46px 46px minmax(118px,1fr)!important;
+  align-items:center!important;
+  gap:8px!important;
+}
+#workoutScreen .rest-adjust-circle{
+  width:46px!important;
+  height:46px!important;
+  min-width:46px!important;
+  padding:0!important;
+  border-radius:14px!important;
+  background:rgba(255,255,255,.045)!important;
+  color:var(--text)!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+  font-size:12px!important;
+  font-weight:850!important;
+  line-height:1!important;
+  -webkit-tap-highlight-color:transparent!important;
+}
+#workoutScreen .rest-adjust-circle:active{
+  transform:scale(.96)!important;
+  background:rgba(255,255,255,.08)!important;
+}
+#workoutScreen .rest-skip{
+  width:100%!important;
+  min-width:0!important;
+  height:46px!important;
+  margin:0!important;
+  padding:0 12px!important;
+  box-sizing:border-box!important;
+  border-radius:14px!important;
+  background:rgba(255,255,255,.025)!important;
+  color:var(--text)!important;
+  border:1px solid rgba(255,255,255,.10)!important;
+  font-size:12px!important;
+  font-weight:800!important;
+  letter-spacing:-.01em!important;
+  white-space:nowrap!important;
+  -webkit-tap-highlight-color:transparent!important;
+}
+#workoutScreen .rest-skip:active{transform:scale(.98)!important;background:rgba(255,255,255,.07)!important}
+#workoutScreen .rest-panel.warning{border-color:rgba(255,159,10,.30)!important}
+#workoutScreen .rest-panel.warning .rest-progress-ring{
+  background:conic-gradient(#ff9f0a var(--rest-progress),rgba(255,255,255,.09) 0)!important;
+}
+@media(max-width:420px){
+  #workoutScreen .rest-panel{min-height:82px!important;padding:9px 10px!important;gap:10px!important;margin-top:10px!important}
+  #workoutScreen .rest-progress-ring{flex-basis:58px!important;width:58px!important;height:58px!important}
+  #workoutScreen .rest-progress-ring span{font-size:13px!important}
+  #workoutScreen .rest-actions{grid-template-columns:44px 44px minmax(112px,1fr)!important;gap:6px!important}
+  #workoutScreen .rest-adjust-circle{width:44px!important;height:44px!important;min-width:44px!important}
+  #workoutScreen .rest-skip{height:44px!important;padding:0 9px!important;font-size:11px!important}
+}
+
+
+/* v1.8.70 — iOS/PWA workout screen: centered progress, equal-width actions, grouped-form polish. */
+#workoutScreen .workout-exercise-card{
+  background:var(--card-bg)!important;
+  border:1px solid color-mix(in srgb,var(--border) 78%,transparent)!important;
+  border-radius:22px!important;
+  box-shadow:0 8px 24px rgba(0,0,0,.14),inset 0 1px 0 rgba(255,255,255,.025)!important;
+}
+#workoutScreen .workout-exercise-heading .workout-exercise-title,
+#workoutScreen .workout-exercise-name-large{
+  letter-spacing:-.025em!important;
+}
+#workoutScreen .workout-action-grid{
+  grid-template-columns:1fr 1fr!important;
+  gap:9px!important;
+}
+#workoutScreen .workout-action-btn{
+  min-width:0!important;
+  min-height:50px!important;
+  border-radius:15px!important;
+}
+#workoutScreen .workout-completion{
+  padding:15px 0 11px!important;
+}
+#workoutScreen .workout-completion-head{
+  justify-content:center!important;
+  text-align:center!important;
+}
+#workoutScreen .workout-completion-head>div{
+  justify-content:center!important;
+}
+#workoutScreen .completion-track{
+  max-width:100%!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+}
+#workoutScreen .workout-recommendation{
+  border-radius:17px!important;
+  box-shadow:none!important;
+}
+#workoutScreen .sets-heading{
+  margin-top:16px!important;
+  margin-bottom:8px!important;
+}
+#workoutScreen .workout-set-row{
+  border-radius:15px!important;
+  background:var(--input-bg)!important;
+  border-color:color-mix(in srgb,var(--border) 72%,transparent)!important;
+}
+#workoutScreen .workout-bottom-actions{
+  grid-template-columns:1fr 1fr!important;
+  gap:9px!important;
+}
+#workoutScreen .workout-bottom-action{
+  min-width:0!important;
+  border-radius:16px!important;
+}
+.workout-exercise-note-modal-content{
+  border-radius:24px!important;
+  padding:0 16px 18px!important;
+}
+.workout-exercise-note-modal-content textarea{
+  width:100%!important;
+  min-height:150px!important;
+  box-sizing:border-box!important;
+  border-radius:16px!important;
+  background:var(--input-bg)!important;
+  border:1px solid var(--border)!important;
+  padding:14px!important;
+  font-size:16px!important;
+  line-height:1.45!important;
+  resize:none!important;
+  -webkit-appearance:none!important;
+}
+.workout-exercise-note-modal-content>button{
+  width:100%!important;
+  min-height:48px!important;
+  margin-top:9px!important;
+  border-radius:14px!important;
+  font-size:15px!important;
+  font-weight:800!important;
+}
+.workout-exercise-note-hint{
+  margin:8px 2px 12px!important;
+  color:var(--subtext)!important;
+  font-size:12px!important;
+  line-height:1.35!important;
+}
+@media(max-width:390px){
+  #workoutScreen .workout-action-btn{min-height:48px!important;padding:8px 9px!important}
+  #workoutScreen .workout-completion-head strong{font-size:30px!important}
+}
+
+/* v1.8.70 — workout completion + exercise-history interaction */
+#workoutScreen .workout-completion-head{
+  justify-content:center!important;
+  text-align:center!important;
+}
+#workoutScreen .workout-completion-head>div{
+  justify-content:center!important;
+  width:100%!important;
+}
+#workoutScreen .completion-track.single{
+  grid-template-columns:minmax(0,1fr)!important;
+}
+#workoutScreen .completion-track.single .completion-segment{
+  width:100%!important;
+}
+.analytics-history-row-clickable{
+  cursor:pointer;
+  min-height:58px;
+  padding:13px 4px!important;
+  border-radius:12px;
+  transition:background .15s ease,transform .12s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.analytics-history-row-clickable:active{
+  background:rgba(255,255,255,.06);
+  transform:scale(.995);
+}
+.analytics-history-row-clickable>i{
+  flex:0 0 auto;
+  font-size:24px!important;
+}
