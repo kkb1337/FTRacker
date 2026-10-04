@@ -1,4 +1,4 @@
-/* FTracker v1.8.81 — Workout replacement/create state fix.
+/* FTracker v1.8.82 — Workout replacement/create state fix.
    Consolidated from the audited inline runtimes without changing their order. */
 
 /* ===== CONSOLIDATED RUNTIME BLOCK 1 ===== */
@@ -6580,7 +6580,7 @@ function showToast(msg) {
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1.8.81', {updateViaCache:'none'}).catch(() => {});
+        navigator.serviceWorker.register('./sw.js?v=1.8.82', {updateViaCache:'none'}).catch(() => {});
     });
 }
 
@@ -6709,7 +6709,10 @@ function renderProgressDashboard(){
     const cfg=selected?getExerciseMetricConfig(type):[];
     const record=selected?getExerciseRecordData(selected):null;
     const first=rows[0], last=rows[rows.length-1];
+    const trendRows=selected ? getExerciseSeries(selected,getHistoryInPeriod(30)) : [];
+    const trendFirst=trendRows[0], trendLast=trendRows[trendRows.length-1];
     const periodLabel='Всё время';
+    const trendPeriodLabel='30 дней';
     const metricKey=window.progressMetricKey && cfg.some(c=>c.key===window.progressMetricKey) ? window.progressMetricKey : (cfg[0]?.key||'');
     window.progressMetricKey=metricKey;
 
@@ -6720,10 +6723,10 @@ function renderProgressDashboard(){
     // a ReferenceError after selecting an exercise: the picker closed, then
     // the dashboard render aborted and appeared to return to exercise choice.
     const activeMetric=cfg.find(c=>c.key===metricKey) || cfg[0];
-    const progressTrend = (first&&last&&activeMetric&&Number.isFinite(Number(first[activeMetric.key]))&&Number.isFinite(Number(last[activeMetric.key]))&&Number(first[activeMetric.key])!==0)
-      ? ((Number(last[activeMetric.key])-Number(first[activeMetric.key]))/Math.abs(Number(first[activeMetric.key]))*100) : null;
+    const progressTrend = (trendFirst&&trendLast&&activeMetric&&Number.isFinite(Number(trendFirst[activeMetric.key]))&&Number.isFinite(Number(trendLast[activeMetric.key]))&&Number(trendFirst[activeMetric.key])!==0)
+      ? ((Number(trendLast[activeMetric.key])-Number(trendFirst[activeMetric.key]))/Math.abs(Number(trendFirst[activeMetric.key]))*100) : null;
     const progressTrendHtml = selected && progressTrend!==null
-      ? `<div class="progress-trend-summary"><span>Тренд за ${escapeHtml(periodLabel)}</span><b class="${progressTrend>0?'up':progressTrend<0?'down':'flat'}">${progressTrend>0?'+':''}${progressTrend.toFixed(1)}%</b></div>` : '';
+      ? `<div class="progress-trend-summary"><span>Тренд за ${escapeHtml(trendPeriodLabel)}</span><b class="${progressTrend>0?'up':progressTrend<0?'down':'flat'}">${progressTrend>0?'+':''}${progressTrend.toFixed(1)}%</b></div>` : '';
 
     let changes='';
     if(first&&last){
@@ -6742,20 +6745,31 @@ function renderProgressDashboard(){
     let historyHtml='';
     if(rows.length){
         historyHtml=rows.slice().reverse().map(r=>{
-            let main='';
-            if(type==='strength') main=`${formatKg(r.weight)} × ${formatNum(r.reps)} повт.`;
-            else if(type==='cardio') main=`${formatNum(r.maxTime)} мин · интенсивность ${formatNum(r.maxIntensity)}`;
-            else main=`${formatNum(r.reps)} повторов`;
             const historyEntryIndex=(data.history||[]).findIndex(h=>{
                 if(!h || !Array.isArray(h.exercises)) return false;
                 const sameDate=new Date(h.date).getTime()===r.date.getTime();
                 return sameDate && h.exercises.some(ex=>normalizeExerciseKey(ex?.name)===normalizeExerciseKey(selected));
             });
+            const entry=historyEntryIndex>=0 ? data.history[historyEntryIndex] : null;
+            const ex=entry?.exercises?.find(x=>normalizeExerciseKey(x?.name)===normalizeExerciseKey(selected));
+            const sets=(ex?.sets||[]).filter(Boolean);
+            const setText=sets.map(s=>{
+                if(type==='strength'){
+                    const w=parseWorkoutNumber(s.weight), reps=parseInt(s.reps);
+                    return Number.isFinite(w)&&Number.isFinite(reps) ? `${formatKg(w)}×${formatNum(reps)}` : '';
+                }
+                if(type==='cardio'){
+                    const t=parseWorkoutNumber(s.time), i=parseWorkoutNumber(s.intensity);
+                    return Number.isFinite(t) ? `${formatNum(t)} мин${Number.isFinite(i)&&i>0?` × ${formatNum(i)}`:''}` : '';
+                }
+                const reps=parseInt(s.reps); return Number.isFinite(reps)?`${formatNum(reps)} повт.`:'';
+            }).filter(Boolean).join(', ');
+            const volume=type==='strength' ? calculateWorkoutVolume({exercises:[ex||{sets:[]}]}) : null;
             const clickable=historyEntryIndex>=0;
             return `<button type="button" class="progress-ex-history-row ${clickable?'is-clickable':''}" ${clickable?`data-progress-history-index="${historyEntryIndex}" data-progress-history-exercise="${escapeHtml(selected)}" aria-label="Открыть тренировку ${r.date.toLocaleDateString('ru-RU')}"`:''}>
-                <span class="progress-ex-history-date">${r.date.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'})}</span>
-                <span class="progress-ex-history-value">${main}${type==='strength'?`<small>Объём ${formatKg(r.volume)}</small>`:''}</span>
-                ${clickable?'<span class="progress-history-chevron">›</span>':''}
+                <span class="progress-ex-history-main"><span class="progress-ex-history-date">${r.date.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'})}</span><span class="progress-ex-history-sets">${escapeHtml(setText||'Нет данных')}</span></span>
+                <span class="progress-ex-history-meta">${type==='strength'?`<span>Объём ${formatKg(volume)}</span>`:''}</span>
+                ${clickable?'<span class="progress-history-chevron" aria-hidden="true">›</span>':''}
             </button>`;
         }).join('');
     } else historyHtml='<div class="progress-ex-no-results">За выбранный период данных нет</div>';
@@ -11511,7 +11525,7 @@ async function clearTemporaryFiles(){
     if(typeof showToast==='function') showToast('Все данные приложения очищены. Перезапуск…');
     setTimeout(()=>{
       // Force the current clean app shell to initialise data from defaults.
-      location.replace(location.pathname+'?v=1.8.81&reset='+Date.now());
+      location.replace(location.pathname+'?v=1.8.82&reset='+Date.now());
     },250);
   }catch(err){
     console.error('Full application reset failed',err);
