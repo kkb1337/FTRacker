@@ -1,4 +1,4 @@
-/* FTracker v1.8.84 — Workout replacement/create state fix.
+/* FTracker v1.8.85 — Workout replacement/create state fix.
    Consolidated from the audited inline runtimes without changing their order. */
 
 /* ===== CONSOLIDATED RUNTIME BLOCK 1 ===== */
@@ -6580,7 +6580,7 @@ function showToast(msg) {
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1.8.84', {updateViaCache:'none'}).catch(() => {});
+        navigator.serviceWorker.register('./sw.js?v=1.8.85', {updateViaCache:'none'}).catch(() => {});
     });
 }
 
@@ -6787,7 +6787,7 @@ function renderProgressDashboard(){
 
     container.innerHTML=`<div class="progress-ex">
         
-        <div class="progress-ex-period progress-period-selector"><span>Период расчёта</span><div class="progress-period-buttons" role="group" aria-label="Период расчёта">${[['30','30 дней'],['90','90 дней'],['all','Всё время']].map(([v,l])=>`<button type="button" class="progress-period-btn ${progressPeriod===v?'active':''}" onclick="setProgressPeriod('${v}')" aria-pressed="${progressPeriod===v}">${l}</button>`).join('')}</div><small>Динамика и тренд пересчитываются за выбранный период</small></div>
+        <div class="progress-ex-period progress-period-selector"><div class="progress-period-buttons" role="group" aria-label="Период">${[['30','30 дней'],['90','90 дней'],['all','Всё время']].map(([v,l])=>`<button type="button" class="progress-period-btn ${progressPeriod===v?'active':''}" onclick="setProgressPeriod('${v}')" aria-pressed="${progressPeriod===v}">${l}</button>`).join('')}</div></div>
         <div class="progress-ex-picker">
             <div class="progress-ex-picker-label">Упражнение</div>
             ${pickerButton}
@@ -11527,7 +11527,7 @@ async function clearTemporaryFiles(){
     if(typeof showToast==='function') showToast('Все данные приложения очищены. Перезапуск…');
     setTimeout(()=>{
       // Force the current clean app shell to initialise data from defaults.
-      location.replace(location.pathname+'?v=1.8.84&reset='+Date.now());
+      location.replace(location.pathname+'?v=1.8.85&reset='+Date.now());
     },250);
   }catch(err){
     console.error('Full application reset failed',err);
