@@ -1,4 +1,4 @@
-/* FTracker v1.8.82 — Workout replacement/create state fix.
+/* FTracker v1.8.83 — Workout replacement/create state fix.
    Consolidated from the audited inline runtimes without changing their order. */
 
 /* ===== CONSOLIDATED RUNTIME BLOCK 1 ===== */
@@ -284,7 +284,7 @@ let pendingDeleteType = null, pendingDeleteIndex = null, pendingDeleteDate = nul
 let pendingArchiveExercise=null;
 let pendingImportData = null;
 let currentAchievements = {};
-let progressPeriod = 'all';
+let progressPeriod = '30';
 let pendingMeasurementSave = null;
 let pendingMeasurementEditIndex = null;
 let currentBodyGraphKey = null;
@@ -6580,7 +6580,7 @@ function showToast(msg) {
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1.8.82', {updateViaCache:'none'}).catch(() => {});
+        navigator.serviceWorker.register('./sw.js?v=1.8.83', {updateViaCache:'none'}).catch(() => {});
     });
 }
 
@@ -6703,16 +6703,17 @@ function renderProgressDashboard(){
     const selected=names.includes(window.progressSelectedExercise)?window.progressSelectedExercise:'';
     window.progressSelectedExercise=selected;
 
-    const history=getHistoryInPeriod('all').slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+    const selectedPeriod = progressPeriod === '90' ? 90 : (progressPeriod === 'all' ? 'all' : 30);
+    const history=getHistoryInPeriod(selectedPeriod).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
     const rows=selected?getExerciseSeries(selected,history):[];
     const type=selected?getExerciseTypeByName(selected):'strength';
     const cfg=selected?getExerciseMetricConfig(type):[];
     const record=selected?getExerciseRecordData(selected):null;
     const first=rows[0], last=rows[rows.length-1];
-    const trendRows=selected ? getExerciseSeries(selected,getHistoryInPeriod(30)) : [];
+    const trendRows=rows;
     const trendFirst=trendRows[0], trendLast=trendRows[trendRows.length-1];
-    const periodLabel='Всё время';
-    const trendPeriodLabel='30 дней';
+    const periodLabel=selectedPeriod==='all'?'Всё время':`${selectedPeriod} дней`;
+    const trendPeriodLabel=periodLabel;
     const metricKey=window.progressMetricKey && cfg.some(c=>c.key===window.progressMetricKey) ? window.progressMetricKey : (cfg[0]?.key||'');
     window.progressMetricKey=metricKey;
 
@@ -6743,8 +6744,9 @@ function renderProgressDashboard(){
         </div>`:'';
 
     let historyHtml='';
-    if(rows.length){
-        historyHtml=rows.slice().reverse().map(r=>{
+    const historyRows=selected ? getExerciseSeries(selected,getHistoryInPeriod('all')) : [];
+    if(historyRows.length){
+        historyHtml=historyRows.slice().reverse().map(r=>{
             const historyEntryIndex=(data.history||[]).findIndex(h=>{
                 if(!h || !Array.isArray(h.exercises)) return false;
                 const sameDate=new Date(h.date).getTime()===r.date.getTime();
@@ -6785,7 +6787,7 @@ function renderProgressDashboard(){
 
     container.innerHTML=`<div class="progress-ex">
         
-        <div class="progress-ex-period progress-all-time"><span>Весь период</span><small>Все сохранённые тренировки</small></div>
+        <div class="progress-ex-period progress-period-selector"><span>Период расчёта</span><div class="progress-period-buttons" role="group" aria-label="Период расчёта">${[['30','30 дней'],['90','90 дней'],['all','Всё время']].map(([v,l])=>`<button type="button" class="progress-period-btn ${progressPeriod===v?'active':''}" onclick="setProgressPeriod('${v}')" aria-pressed="${progressPeriod===v}">${l}</button>`).join('')}</div><small>Динамика и тренд пересчитываются за выбранный период</small></div>
         <div class="progress-ex-picker">
             <div class="progress-ex-picker-label">Упражнение</div>
             ${pickerButton}
@@ -6805,7 +6807,7 @@ function toggleProgressSection(key){
     const head=el.querySelector('.progress-ex-section-head'); if(head)head.setAttribute('aria-expanded',String(!collapsed));
     if(!collapsed && key==='dynamic' && window.progressSelectedExercise){
         const canvas=document.getElementById('progressExChartMain');
-        const name=window.progressSelectedExercise, rows=getExerciseSeries(name,getHistoryInPeriod('all'))||[], type=getExerciseTypeByName(name), cfg=getExerciseMetricConfig(type);
+        const name=window.progressSelectedExercise, p=progressPeriod==='90'?90:(progressPeriod==='all'?'all':30), rows=getExerciseSeries(name,getHistoryInPeriod(p))||[], type=getExerciseTypeByName(name), cfg=getExerciseMetricConfig(type);
         const metricKey=window.progressMetricKey||cfg[0]?.key; const metric=cfg.find(c=>c.key===metricKey)||cfg[0];
         if(canvas&&metric) requestAnimationFrame(()=>drawLineChart(canvas,rows.map(r=>({date:r.date,value:Number(r[metric.key])||0}))));
     }
@@ -11525,7 +11527,7 @@ async function clearTemporaryFiles(){
     if(typeof showToast==='function') showToast('Все данные приложения очищены. Перезапуск…');
     setTimeout(()=>{
       // Force the current clean app shell to initialise data from defaults.
-      location.replace(location.pathname+'?v=1.8.82&reset='+Date.now());
+      location.replace(location.pathname+'?v=1.8.83&reset='+Date.now());
     },250);
   }catch(err){
     console.error('Full application reset failed',err);
