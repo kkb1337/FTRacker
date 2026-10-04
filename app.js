@@ -1,4 +1,4 @@
-/* FTracker v1.8.80 — Workout replacement/create state fix.
+/* FTracker v1.8.81 — Workout replacement/create state fix.
    Consolidated from the audited inline runtimes without changing their order. */
 
 /* ===== CONSOLIDATED RUNTIME BLOCK 1 ===== */
@@ -284,7 +284,7 @@ let pendingDeleteType = null, pendingDeleteIndex = null, pendingDeleteDate = nul
 let pendingArchiveExercise=null;
 let pendingImportData = null;
 let currentAchievements = {};
-let progressPeriod = 30;
+let progressPeriod = 'all';
 let pendingMeasurementSave = null;
 let pendingMeasurementEditIndex = null;
 let currentBodyGraphKey = null;
@@ -6580,7 +6580,7 @@ function showToast(msg) {
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1.8.80', {updateViaCache:'none'}).catch(() => {});
+        navigator.serviceWorker.register('./sw.js?v=1.8.81', {updateViaCache:'none'}).catch(() => {});
     });
 }
 
@@ -6703,13 +6703,13 @@ function renderProgressDashboard(){
     const selected=names.includes(window.progressSelectedExercise)?window.progressSelectedExercise:'';
     window.progressSelectedExercise=selected;
 
-    const history=getHistoryInPeriod(progressPeriod).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+    const history=getHistoryInPeriod('all').slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
     const rows=selected?getExerciseSeries(selected,history):[];
     const type=selected?getExerciseTypeByName(selected):'strength';
     const cfg=selected?getExerciseMetricConfig(type):[];
     const record=selected?getExerciseRecordData(selected):null;
     const first=rows[0], last=rows[rows.length-1];
-    const periodLabel=progressPeriod==='all'?'Всё время':`Последние ${progressPeriod} дней`;
+    const periodLabel='Всё время';
     const metricKey=window.progressMetricKey && cfg.some(c=>c.key===window.progressMetricKey) ? window.progressMetricKey : (cfg[0]?.key||'');
     window.progressMetricKey=metricKey;
 
@@ -6733,10 +6733,10 @@ function renderProgressDashboard(){
     const metricButtons=cfg.map(c=>`<button type="button" class="progress-chart-metric ${metricKey===c.key?'active':''}" onclick="setProgressMetric('${c.key}')">${escapeHtml(c.label)}</button>`).join('');
 
     const chartBlock=(selected&&rows.length&&activeMetric)?`
-        <div class="progress-ex-section progress-chart-section">
-            <div class="progress-ex-section-head"><div><div class="progress-ex-section-title">Динамика</div></div><span class="progress-section-chevron">⌄</span></div>
-            <div class="progress-chart-metrics">${metricButtons}</div>
-            <div class="progress-ex-chart progress-single-chart"><canvas id="progressExChartMain"></canvas></div>
+        <div class="progress-ex-section progress-chart-section progress-collapsible collapsed" data-progress-collapse="dynamic">
+            <button type="button" class="progress-ex-section-head" onclick="toggleProgressSection('dynamic')" aria-expanded="false"><span><span class="progress-ex-section-title">Динамика</span><span class="progress-ex-section-sub">График за всё время</span></span><span class="progress-section-chevron">⌄</span></button>
+            <div class="progress-collapsible-body"><div class="progress-chart-metrics">${metricButtons}</div>
+            <div class="progress-ex-chart progress-single-chart"><canvas id="progressExChartMain"></canvas></div></div>
         </div>`:'';
 
     let historyHtml='';
@@ -6771,18 +6771,29 @@ function renderProgressDashboard(){
 
     container.innerHTML=`<div class="progress-ex">
         
-        <div class="progress-ex-period"><button class="${progressPeriod===30?'active':''}" onclick="setProgressPeriod(30)" type="button">30 дней</button><button class="${progressPeriod===90?'active':''}" onclick="setProgressPeriod(90)" type="button">90 дней</button><button class="${progressPeriod==='all'?'active':''}" onclick="setProgressPeriod('all')" type="button">Всё время</button></div>
+        <div class="progress-ex-period progress-all-time"><span>Весь период</span><small>Все сохранённые тренировки</small></div>
         <div class="progress-ex-picker">
             <div class="progress-ex-picker-label">Упражнение</div>
             ${pickerButton}
         </div>
         ${selected?`<div class="progress-ex-section"><div class="progress-ex-section-title">Сводка</div><div class="progress-ex-section-sub">${progressEsc(periodLabel)} · рекорды считаются за всё время.</div><div class="progress-ex-metrics">${metrics}</div>${progressTrendHtml}${changes?`<div class="progress-ex-change">${changes}</div>`:''}</div>`:''}
         ${chartBlock}
-        ${selected?`<div class="progress-ex-section progress-history-section"><div class="progress-ex-section-head"><div><div class="progress-ex-section-title">История</div><div class="progress-ex-section-sub">Результаты по тренировкам за выбранный период.</div></div><span class="progress-section-chevron">⌄</span></div><div class="progress-ex-history">${historyHtml}</div></div>`:''}
+        ${selected?`<div class="progress-ex-section progress-history-section progress-collapsible collapsed" data-progress-collapse="history"><button type="button" class="progress-ex-section-head" onclick="toggleProgressSection('history')" aria-expanded="false"><span><span class="progress-ex-section-title">История</span><span class="progress-ex-section-sub">Все тренировки за всё время</span></span><span class="progress-section-chevron">⌄</span></button><div class="progress-collapsible-body"><div class="progress-ex-history">${historyHtml}</div></div></div>`:''}
     </div>`;
 
     if(selected&&rows.length&&activeMetric){
         drawLineChart(document.getElementById('progressExChartMain'),rows.map(r=>({date:r.date,value:Number(r[activeMetric.key])||0})));
+    }
+}
+function toggleProgressSection(key){
+    const el=document.querySelector(`#progressScreen [data-progress-collapse="${key}"]`); if(!el)return;
+    const collapsed=el.classList.toggle('collapsed');
+    const head=el.querySelector('.progress-ex-section-head'); if(head)head.setAttribute('aria-expanded',String(!collapsed));
+    if(!collapsed && key==='dynamic' && window.progressSelectedExercise){
+        const canvas=document.getElementById('progressExChartMain');
+        const name=window.progressSelectedExercise, rows=getExerciseSeries(name,getHistoryInPeriod('all'))||[], type=getExerciseTypeByName(name), cfg=getExerciseMetricConfig(type);
+        const metricKey=window.progressMetricKey||cfg[0]?.key; const metric=cfg.find(c=>c.key===metricKey)||cfg[0];
+        if(canvas&&metric) requestAnimationFrame(()=>drawLineChart(canvas,rows.map(r=>({date:r.date,value:Number(r[metric.key])||0}))));
     }
 }
 function setProgressMetric(key){ window.progressMetricKey=key; renderProgressDashboard(); }
@@ -11500,7 +11511,7 @@ async function clearTemporaryFiles(){
     if(typeof showToast==='function') showToast('Все данные приложения очищены. Перезапуск…');
     setTimeout(()=>{
       // Force the current clean app shell to initialise data from defaults.
-      location.replace(location.pathname+'?v=1.8.80&reset='+Date.now());
+      location.replace(location.pathname+'?v=1.8.81&reset='+Date.now());
     },250);
   }catch(err){
     console.error('Full application reset failed',err);
@@ -11570,4 +11581,22 @@ async function clearTemporaryFiles(){
     if(window.ResizeObserver && bar) new ResizeObserver(sync).observe(bar);
   });
   requestAnimationFrame(sync);
+})();
+
+(function(){
+  const st=document.createElement('style'); st.id='progress-all-time-polish'; st.textContent=`
+    #progressScreen .progress-ex-period.progress-all-time{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--card-bg);border:1px solid var(--border);border-radius:14px;color:var(--text);}
+    #progressScreen .progress-ex-period.progress-all-time span{font-weight:700;}
+    #progressScreen .progress-ex-period.progress-all-time small{color:var(--subtext);font-size:12px;}
+    #progressScreen .progress-collapsible{overflow:hidden;}
+    #progressScreen .progress-collapsible .progress-ex-section-head{width:100%;display:flex;align-items:center;justify-content:space-between;text-align:left;background:transparent!important;color:var(--text)!important;border:0!important;box-shadow:none!important;padding:14px 0!important;margin:0!important;}
+    #progressScreen .progress-collapsible .progress-ex-section-head span:first-child{display:flex;flex-direction:column;gap:3px;}
+    #progressScreen .progress-collapsible .progress-ex-section-sub{color:var(--subtext);font-size:12px;}
+    #progressScreen .progress-collapsible .progress-section-chevron{color:var(--subtext);transition:transform .2s ease;}
+    #progressScreen .progress-collapsible.collapsed .progress-section-chevron{transform:rotate(-90deg);}
+    #progressScreen .progress-collapsible-body{display:block;}
+    #progressScreen .progress-collapsible.collapsed .progress-collapsible-body{display:none;}
+    #progressScreen .progress-ex-history-row{background:var(--card-bg)!important;color:var(--text)!important;border:1px solid var(--border)!important;box-shadow:none!important;}
+    #progressScreen .progress-ex-history-row.is-clickable{background:var(--card-bg)!important;}
+  `; document.head.appendChild(st);
 })();
