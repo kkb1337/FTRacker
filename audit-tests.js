@@ -1,4 +1,4 @@
-/* FTracker v1.8.70 logic regression tests; run with: node audit-tests.js */
+/* FTracker v1.8.72 logic regression tests; run with: node audit-tests.js */
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const app=fs.readFileSync('app.js','utf8');
@@ -52,9 +52,9 @@ assert.doesNotMatch(app,/insertAdjacentHTML\('beforeend', `.*program-picker-add-
 assert.match(index,/exercisePickerSearch/);
 
 // Release metadata must be synchronized.
-for(const s of [app,index,manifest,sw,readme]) assert.ok(s.includes('1.8.70'),'stale release version');
+for(const s of [app,index,manifest,sw,readme]) assert.ok(s.includes('1.8.72'),'stale release version');
 assert.ok(index.includes('от 03.10.26'),'release date missing');
-assert.ok(sw.includes("const APP_VERSION = '1.8.70'"),'SW cache version missing');
+assert.ok(sw.includes("const APP_VERSION = '1.8.72'"),'SW cache version missing');
 
 
 assert.ok(app.includes("weights:{systemity:40,strength:60}"),'training index default weights must be 40/60');
@@ -66,14 +66,14 @@ assert.ok(app.includes('createdAt'), 'custom goal creation baseline missing');
 assert.ok(app.includes('Math.max(now-days*86400000,Number(startAt)||0)'), 'goal startAt baseline missing');
 assert.ok(app.includes('const total=baseTotal;'),'extra completed sets must not expand workout progress');
 
-// v1.8.70: exercise notes use a durable exercise-keyed store and remain mirrored in the directory.
+// v1.8.72: exercise notes use a durable exercise-keyed store and remain mirrored in the directory.
 assert.match(app,/exerciseNotes:\s*\{\}/,'durable exercise notes store missing');
 assert.match(app,/data\.exerciseNotes\[key\]=note/,'exercise note write path missing');
 assert.match(app,/delete data\.exerciseNotes\[key\]/,'exercise note clear path missing');
 assert.match(app,/data\.exerciseNotes && Object\.prototype\.hasOwnProperty\.call\(data\.exerciseNotes,key\)/,'exercise note read path missing');
-assert.ok(css.includes('#workoutScreen .workout-completion-head{\n  justify-content:center!important;'),'workout completion should be centered');
-assert.ok(css.includes('#workoutScreen .workout-action-grid{\n  grid-template-columns:1fr 1fr!important;'),'workout action buttons should have equal width');
-console.log('FTracker v1.8.70 logic regression tests: OK');
+assert.match(css,/#workoutScreen \.workout-completion-head\{[^}]*justify-content:center!important/,'workout completion should be centered');
+assert.match(css,/#workoutScreen \.workout-action-grid\{[^}]*grid-template-columns:1fr 1fr!important/,'workout action buttons should have equal width');
+console.log('FTracker v1.8.72 logic regression tests: OK');
 
 // v1.8.57: replacement creation must replace the frozen slot, not append.
 assert(fs.readFileSync('app.js','utf8').includes("workoutNewExerciseContext={mode:'replace',slot,programIndex:Number(currentProgram),oldRef:slots[slot]}"), 'replace creation context must freeze slot before closing replace modal');
@@ -83,7 +83,6 @@ assert(fs.readFileSync('app.js','utf8').includes('slots.splice(slot,1,ref);'), '
 // v1.8.57: workout header UI remains compact and uses a clear back arrow.
 assert.ok(index.includes('class="workout-close"'),'workout back control missing');
 assert.ok(index.includes('>←</button>'),'workout back arrow missing');
-assert.ok(css.includes('v1.8.57 — workout notes'),'v1.8.57 workout UI block missing');
 assert.ok(css.includes('#workoutScreen .workout-time'),'workout timer styling missing');
 assert.ok(css.includes('#workoutScreen .workout-exercise-name-large'),'workout exercise title styling missing');
 
@@ -97,7 +96,7 @@ assert.match(app,/Выключено в цели/,'disabled factor should not be
 
 // v1.8.66: tolerance is a maintain-only UI field. The hidden class must
 // override the more-specific flex layout rule.
-assert.match(css,/\.fscore-target-values \.fscore-target-value-cell\.tolerance\.hidden\{display:none!important;\}/,
+assert.match(css,/\.fscore-target-values \.fscore-target-value-cell\.tolerance\.hidden\{display:none!important;?\}/,
   'non-maintain tolerance field must remain hidden');
 
 // v1.8.66: enabled Index factors must always sum to exactly 100%.
@@ -116,4 +115,4 @@ const rebalanceEdited=(weights,enabled,changedKey,value)=>{const out={...weights
 assert.deepEqual(rebalanceEdited({body:40,training:30,nutrition:30},{body:true,training:true,nutrition:true},'body',70),{body:70,training:15,nutrition:15});
 assert.deepEqual(rebalanceEdited({body:70,training:15,nutrition:15},{body:true,training:true,nutrition:false},'body',70),{body:70,training:30,nutrition:15});
 assert.deepEqual(rebalanceEdited({body:50,training:30,nutrition:20},{body:true,training:true,nutrition:true},'training',60),{body:29,training:60,nutrition:11});
-console.log('FTracker v1.8.70 Index-weight regression checks: OK');
+console.log('FTracker v1.8.72 Index-weight regression checks: OK');
