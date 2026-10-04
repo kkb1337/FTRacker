@@ -1,4 +1,4 @@
-/* FTracker v1.8.85 — Workout replacement/create state fix.
+/* FTracker v1.8.86 — Workout replacement/create state fix.
    Consolidated from the audited inline runtimes without changing their order. */
 
 /* ===== CONSOLIDATED RUNTIME BLOCK 1 ===== */
@@ -6580,7 +6580,7 @@ function showToast(msg) {
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1.8.85', {updateViaCache:'none'}).catch(() => {});
+        navigator.serviceWorker.register('./sw.js?v=1.8.86', {updateViaCache:'none'}).catch(() => {});
     });
 }
 
@@ -6726,13 +6726,13 @@ function renderProgressDashboard(){
     const activeMetric=cfg.find(c=>c.key===metricKey) || cfg[0];
     const progressTrend = (trendFirst&&trendLast&&activeMetric&&Number.isFinite(Number(trendFirst[activeMetric.key]))&&Number.isFinite(Number(trendLast[activeMetric.key]))&&Number(trendFirst[activeMetric.key])!==0)
       ? ((Number(trendLast[activeMetric.key])-Number(trendFirst[activeMetric.key]))/Math.abs(Number(trendFirst[activeMetric.key]))*100) : null;
-    const progressTrendHtml = selected && progressTrend!==null
-      ? `<div class="progress-trend-summary"><span>Тренд за ${escapeHtml(trendPeriodLabel)}</span><b class="${progressTrend>0?'up':progressTrend<0?'down':'flat'}">${progressTrend>0?'+':''}${progressTrend.toFixed(1)}%</b></div>` : '';
-
     let changes='';
     if(first&&last){
         changes=cfg.map(c=>`<div class="progress-ex-change-row"><span>${escapeHtml(c.label)}</span>${progressDelta(Number(first[c.key])||0,Number(last[c.key])||0,c.unit?` ${c.unit}`:'')}</div>`).join('');
     }
+
+    const progressTrendHtml = selected && progressTrend!==null
+      ? `<div class="progress-ex-trend"><div class="progress-ex-trend-head"><span>Тренд за ${escapeHtml(trendPeriodLabel)}</span><b class="${progressTrend>0?'up':progressTrend<0?'down':'flat'}">${progressTrend>0?'+':''}${progressTrend.toFixed(1)}%</b></div>${changes?`<div class="progress-ex-trend-grid">${changes}</div>`:''}</div>` : '';
 
     const metricButtons=cfg.map(c=>`<button type="button" class="progress-chart-metric ${metricKey===c.key?'active':''}" onclick="setProgressMetric('${c.key}')">${escapeHtml(c.label)}</button>`).join('');
 
@@ -6792,7 +6792,7 @@ function renderProgressDashboard(){
             <div class="progress-ex-picker-label">Упражнение</div>
             ${pickerButton}
         </div>
-        ${selected?`<div class="progress-ex-section"><div class="progress-ex-section-title">Сводка</div><div class="progress-ex-section-sub">${progressEsc(periodLabel)} · рекорды считаются за всё время.</div><div class="progress-ex-metrics">${metrics}</div>${progressTrendHtml}${changes?`<div class="progress-ex-change">${changes}</div>`:''}</div>`:''}
+        ${selected?`<div class="progress-ex-section"><div class="progress-ex-section-title">Сводка</div><div class="progress-ex-section-sub">${progressEsc(periodLabel)} · рекорды считаются за всё время.</div><div class="progress-ex-metrics">${metrics}</div>${progressTrendHtml}</div>`:''}
         ${chartBlock}
         ${selected?`<div class="progress-ex-section progress-history-section progress-collapsible collapsed" data-progress-collapse="history"><button type="button" class="progress-ex-section-head" onclick="toggleProgressSection('history')" aria-expanded="false"><span><span class="progress-ex-section-title">История</span><span class="progress-ex-section-sub">Все тренировки за всё время</span></span><span class="progress-section-chevron">⌄</span></button><div class="progress-collapsible-body"><div class="progress-ex-history">${historyHtml}</div></div></div>`:''}
     </div>`;
@@ -11527,7 +11527,7 @@ async function clearTemporaryFiles(){
     if(typeof showToast==='function') showToast('Все данные приложения очищены. Перезапуск…');
     setTimeout(()=>{
       // Force the current clean app shell to initialise data from defaults.
-      location.replace(location.pathname+'?v=1.8.85&reset='+Date.now());
+      location.replace(location.pathname+'?v=1.8.86&reset='+Date.now());
     },250);
   }catch(err){
     console.error('Full application reset failed',err);
