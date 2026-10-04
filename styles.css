@@ -1,14 +1,17 @@
 body{--accent:var(--button-green);--surface-2:var(--card-bg);color:var(--text);touch-action:manipulation}
-*{box-sizing:border-box;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif}
+*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display',system-ui,sans-serif}
 .container{max-width:600px;position:relative;box-sizing:border-box}
-.card{background:var(--card-bg);padding:20px;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.2);transition:transform 0.2s, box-shadow 0.2s}
+.card{background:var(--ft-surface);padding:16px;border-radius:var(--ft-radius-lg);border:1px solid var(--ft-border);box-shadow:var(--ft-shadow-md);transition:transform .2s,box-shadow .2s}
 .card:active{transform:scale(0.98)}
-button{border:0;border-radius:14px;padding:14px;background:var(--accent-gradient);color:#fff;font-size:17px;font-weight:600;cursor:pointer;width:100%;margin-top:6px;transition:0.2s}
+button{border:0;border-radius:var(--ft-radius-md);padding:0 16px;min-height:var(--ui-btn-height);background:var(--accent-gradient);color:#fff;font-size:var(--ft-text-control);font-weight:var(--ft-weight-semibold);cursor:pointer;width:100%;margin-top:6px;transition:background-color .16s ease,transform .12s ease,box-shadow .16s ease,opacity .16s ease}
 .hidden{display:none}
+:where(button,input,select,textarea,[tabindex]):focus-visible{outline:2px solid var(--ft-accent);outline-offset:2px}
+:where(button,input,select,textarea):disabled,[aria-disabled="true"]{cursor:not-allowed;opacity:.5}
+button:active{transform:scale(.985)}
 .title{font-size:36px;font-weight:800;text-align:center;margin-bottom:8px;background:var(--accent-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .subtitle{color:var(--subtext);text-align:center;margin-bottom:24px}
 .big-number{font-size:42px;font-weight:700;color:var(--button-green);text-align:center;margin:10px 0}
-input,select{width:100%;padding:10px;border-radius:10px;font-size:16px;text-align:left;margin:4px 0}
+input,select{width:100%;min-height:44px;padding:10px 14px;border-radius:var(--ft-radius-md);font-size:var(--ft-text-control);text-align:left;margin:4px 0}
 .row{display:flex;gap:8px}
 .row>*{flex:1}
 .exercise-strip{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;padding-bottom:8px;scroll-behavior:smooth}
@@ -847,8 +850,27 @@ body.light-mode #workoutScreen #exerciseStrip .exercise-dot.active{background:rg
 #workoutScreen .workout-recommendation .recommendation-head{color:#62d26d!important}
 #workoutScreen .workout-recommendation .recommendation-toggle{background:rgba(52,199,89,.16)!important;color:#62d26d!important}
 #workoutScreen .workout-recommendation .recommendation-main b{color:#fff!important}
-body{--bg:#0b0b0f;--card-bg:#15151b;--text:#f7f7fb;--subtext:#a8a7b2;--input-bg:#20202a;--button-gray:#272731;--border:#2c2b36;--negative:#ff5f67;--toast-text:#fff;--modal-overlay:rgba(5,5,9,.78)}
-body.light-mode{--bg:#f5f3f9;--card-bg:#fff;--text:#19161f;--subtext:#77717f;--input-bg:#ece9f2;--button-gray:#e3e0e9;--border:#ddd8e5;--negative:#d83b49;--toast-text:#fff;--modal-overlay:rgba(25,20,35,.35)}
+body{
+--bg:#0b0b0f;--card-bg:#15151b;--text:#f7f7fb;--subtext:#a8a7b2;--input-bg:#20202a;--button-gray:#272731;--border:#2c2b36;--negative:#ff5f67;--toast-text:#fff;--modal-overlay:rgba(5,5,9,.78);
+--ft-bg:var(--bg);--ft-surface:var(--card-bg);--ft-surface-secondary:var(--input-bg);
+--ft-text:var(--text);--ft-text-secondary:var(--subtext);--ft-text-tertiary:color-mix(in srgb,var(--subtext) 72%,transparent);
+--ft-border:var(--border);--ft-border-subtle:color-mix(in srgb,var(--border) 58%,transparent);
+--ft-accent:var(--button-green);--ft-accent-pressed:color-mix(in srgb,var(--button-green) 78%,#000);
+--ft-success:var(--positive);--ft-warning:#ff9f0a;--ft-error:var(--negative);--ft-overlay:var(--modal-overlay);
+--ft-space-1:4px;--ft-space-2:8px;--ft-space-3:12px;--ft-space-4:16px;--ft-space-5:20px;--ft-space-6:24px;--ft-space-7:32px;
+--ft-radius-sm:10px;--ft-radius-md:14px;--ft-radius-lg:20px;--ft-radius-pill:999px;
+--ft-shadow-sm:0 1px 3px rgba(0,0,0,.08);--ft-shadow-md:0 4px 14px rgba(0,0,0,.10);--ft-shadow-lg:0 12px 32px rgba(0,0,0,.16);
+--ft-text-xs:11px;--ft-text-sm:13px;--ft-text-md:15px;--ft-text-control:16px;--ft-text-lg:17px;--ft-text-title:20px;--ft-text-screen:22px;--ft-text-display:28px;--ft-text-hero:42px;
+--ft-weight-regular:400;--ft-weight-medium:500;--ft-weight-semibold:600;--ft-weight-bold:700;--ft-weight-heavy:800;
+--ft-leading-tight:1.15;--ft-leading-normal:1.35;--ft-leading-relaxed:1.5;
+--ft-screen-side:16px;--ft-header-height:56px;--ft-header-control:44px;--ft-header-gap:8px;
+--ft-safe-top:env(safe-area-inset-top,0px);--ft-safe-right:env(safe-area-inset-right,0px);--ft-safe-bottom:env(safe-area-inset-bottom,0px);--ft-safe-left:env(safe-area-inset-left,0px);
+--ft-z-base:1;--ft-z-sticky:100;--ft-z-header:200;--ft-z-overlay:1000;--ft-z-modal:1100;--ft-z-dialog:1200;--ft-z-toast:1300;
+}
+body.light-mode{
+--bg:#f5f3f9;--card-bg:#fff;--text:#19161f;--subtext:#77717f;--input-bg:#ece9f2;--button-gray:#e3e0e9;--border:#ddd8e5;--negative:#d83b49;--toast-text:#fff;--modal-overlay:rgba(25,20,35,.35);
+--ft-bg:var(--bg);--ft-surface:var(--card-bg);--ft-surface-secondary:var(--input-bg);--ft-text:var(--text);--ft-text-secondary:var(--subtext);--ft-text-tertiary:color-mix(in srgb,var(--subtext) 72%,transparent);--ft-border:var(--border);--ft-border-subtle:color-mix(in srgb,var(--border) 58%,transparent);--ft-accent:var(--button-green);--ft-accent-pressed:color-mix(in srgb,var(--button-green) 78%,#000);--ft-success:var(--positive);--ft-warning:#ff9f0a;--ft-error:var(--negative);--ft-overlay:var(--modal-overlay);
+}
 .container{width:min(100%,680px);padding:18px 14px 30px;margin:0 auto}
 .card,.progress-section,.analysis-card,.body-hero-card,.body-comparison-card,.body-history-card,.timer-box,.centered-card{background:var(--card-bg)!important;border:1px solid var(--border)!important;border-radius:20px!important;box-shadow:0 8px 24px rgba(0,0,0,.14)!important;overflow:hidden}
 button{min-width:0;box-sizing:border-box;overflow:hidden;text-overflow:ellipsis}
@@ -2108,7 +2130,7 @@ body{background:var(--bg)}
 .modal-content,.window-content,.sheet-content{height:100%;max-height:none!important;overflow:auto}
 .screen-header .title,.page-title,.section-title{min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;text-align:center}
 .back-button,.screen-header button:first-child{min-height:40px;border-radius:12px}
-:root{--ui-btn-height:44px;--ui-radius:12px;--ui-card-radius:16px;--ui-gap:12px}
+:root{--ui-btn-height:48px;--ui-radius:14px;--ui-card-radius:16px;--ui-gap:12px}
 button,.btn,.button,.action-btn{min-height:var(--ui-btn-height);border-radius:var(--ui-radius)}
 .header-title,.screen-title,.page-title,h1,h2{overflow-wrap:anywhere;white-space:normal}
 .card,.panel,.content-card{border-radius:var(--ui-card-radius)}
@@ -2142,7 +2164,7 @@ button,.btn,.button,.action-btn{min-height:var(--ui-btn-height);border-radius:va
 @media(max-width:360px){:root{--ft-header-side:68px}
 .screen-header>.title,.unified-surface-header>.surface-title{font-size:19px!important}
 #workoutScreen .workout-title-wrap .title{font-size:18px!important}
-}:root{--ft-header-side:76px;--ft-header-control:44px}
+}:root{--ft-header-side:76px;--ft-header-control:var(--ft-header-control)}
 #app>[id$="Screen"]>.screen-header,.ft-window-root.ft-window-workspace>.date-modal-content>.unified-surface-header,.ft-window-root.ft-window-workspace>.exercise-modal-content>.unified-surface-header,.ft-window-root.ft-window-workspace>.catalog-modal-content>.unified-surface-header,.ft-window-root.ft-window-workspace>.food-modal-content>.unified-surface-header,.ft-window-root.ft-window-workspace>.workout-detail-content>.unified-surface-header,.ft-window-root.ft-window-workspace>.measurement-manager-modal-content>.unified-surface-header,.ft-window-root.ft-window-workspace>.body-graph-modal-content>.unified-surface-header,.ft-window-root.ft-window-workspace>.body-history-modal-content>.unified-surface-header,.ft-window-root.ft-window-workspace>.exercise-editor-unified>.unified-surface-header,.ft-window-root.ft-window-workspace>.ft-window-content>.unified-surface-header,.technique-modal>.technique-modal-content>.exercise-card-header,.technique-modal>.technique-modal-content>.unified-surface-header{position:sticky!important;top:0!important;z-index:1000!important;width:100%!important;height:var(--ft-header-h)!important;min-height:var(--ft-header-h)!important;max-height:var(--ft-header-h)!important;margin:0 0 12px!important;padding:0!important;box-sizing:border-box!important;display:grid!important;grid-template-columns:var(--ft-header-side) minmax(0,1fr) var(--ft-header-side)!important;grid-template-rows:1fr!important;align-items:center!important;gap:8px!important;background:var(--bg)!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;overflow:visible!important;transform:none!important}
 .ft-window-root.ft-window-workspace>.date-modal-content>.unified-surface-header,.ft-window-root.ft-window-workspace>.exercise-modal-content>.unified-surface-header,.ft-window-root.ft-window-workspace>.catalog-modal-content>.unified-surface-header,.ft-window-root.ft-window-workspace>.food-modal-content>.unified-surface-header,.ft-window-root.ft-window-workspace>.workout-detail-content>.unified-surface-header,.ft-window-root.ft-window-workspace>.measurement-manager-modal-content>.unified-surface-header,.ft-window-root.ft-window-workspace>.body-graph-modal-content>.unified-surface-header,.ft-window-root.ft-window-workspace>.body-history-modal-content>.unified-surface-header,.ft-window-root.ft-window-workspace>.exercise-editor-unified>.unified-surface-header,.ft-window-root.ft-window-workspace>.ft-window-content>.unified-surface-header,.technique-modal>.technique-modal-content>.exercise-card-header,.technique-modal>.technique-modal-content>.unified-surface-header{top:0!important}
 #app>[id$="Screen"]>.screen-header>button:first-child,.unified-surface-header>.surface-back-btn{grid-column:1!important;grid-row:1!important;justify-self:start!important;position:static!important;inset:auto!important;transform:none!important;width:var(--ft-header-side)!important;min-width:var(--ft-header-side)!important;max-width:var(--ft-header-side)!important;height:var(--ft-header-control)!important;min-height:var(--ft-header-control)!important;max-height:var(--ft-header-control)!important;margin:0!important;padding:0 8px!important;display:flex!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important;z-index:1001!important}
@@ -2187,7 +2209,7 @@ button,.btn,.button,.action-btn{min-height:var(--ui-btn-height);border-radius:va
 body>button[title="Export Full Black Box"]{display:flex!important;align-items:center!important;justify-content:center!important}
 @media(max-width:430px){:root{--ft-ui-header-side:76px}
 #app>[id$="Screen"]>.screen-header>button:first-child,.ft-window-root.ft-window-workspace .unified-surface-header>.surface-back-btn,.ft-window-root.ft-window-workspace .unified-surface-header-close>.surface-close-btn,.ft-window-root.ft-window-workspace .unified-surface-header-close>.close-btn,.ft-window-root.ft-window-workspace .unified-surface-header-close>.modal-close-btn{font-size:15px!important}
-}:root{--ft-window-side:76px;--ft-window-header:56px}
+}:root{--ft-window-side:76px;--ft-window-header:var(--ft-header-height)}
 #app>#progressScreen,#app>#fscoreAnalyticsScreen,#app>#bodyScreen,#app>#settingsScreen,#app>#exerciseDirectoryScreen,#app>#historyScreen,#app>#foodScreen{padding:0!important;margin:0!important}
 #app>#progressScreen>.screen-header,#app>#fscoreAnalyticsScreen>.screen-header,#app>#bodyScreen>.screen-header,#app>#settingsScreen>.screen-header,#app>#exerciseDirectoryScreen>.screen-header,#app>#historyScreen>.screen-header,#app>#foodScreen>.screen-header{position:sticky!important;top:0!important;z-index:1000!important;width:100%!important;min-height:var(--ft-window-header)!important;height:auto!important;margin:0 0 12px!important;padding:4px 0!important;box-sizing:border-box!important;display:grid!important;grid-template-columns:var(--ft-window-side) minmax(0,1fr) var(--ft-window-side)!important;align-items:center!important;gap:8px!important;background:var(--bg)!important;box-shadow:none!important;overflow:visible!important}
 #app>#progressScreen>.screen-header>button:first-child,#app>#fscoreAnalyticsScreen>.screen-header>button:first-child,#app>#bodyScreen>.screen-header>button:first-child,#app>#settingsScreen>.screen-header>button:first-child,#app>#exerciseDirectoryScreen>.screen-header>button:first-child,#app>#historyScreen>.screen-header>button:first-child,#app>#foodScreen>.screen-header>button:first-child{grid-column:1!important;justify-self:start!important;width:var(--ft-window-side)!important;min-width:var(--ft-window-side)!important;max-width:var(--ft-window-side)!important;height:44px!important;min-height:44px!important;margin:0!important;padding:0 8px!important;border-radius:14px!important;box-sizing:border-box!important}
@@ -3755,3 +3777,998 @@ body.light-mode .toast{background:rgba(255,255,255,.97)!important;color:#1c1c1e!
 .analytics-history-row-clickable{cursor:pointer;min-height:58px;padding:13px 4px!important;border-radius:12px;transition:background .15s ease,transform .12s ease;-webkit-tap-highlight-color:transparent}
 .analytics-history-row-clickable:active{background:rgba(255,255,255,.06);transform:scale(.995)}
 .analytics-history-row-clickable>i{flex:0 0 auto;font-size:24px!important}
+
+/* ========================================================================
+   FTracker UI Refactor — Apple iOS visual system
+   Scope: visual presentation only. No DOM/API/business-logic changes.
+   ======================================================================== */
+
+:root {
+  --ft-ui-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, "Segoe UI", sans-serif;
+  --ft-ui-bg: #000000;
+  --ft-ui-surface: #1c1c1e;
+  --ft-ui-surface-2: #2c2c2e;
+  --ft-ui-surface-3: #3a3a3c;
+  --ft-ui-text: #f5f5f7;
+  --ft-ui-text-2: #aeaeb2;
+  --ft-ui-text-3: #8e8e93;
+  --ft-ui-separator: rgba(255,255,255,.14);
+  --ft-ui-separator-strong: rgba(255,255,255,.22);
+  --ft-ui-accent: #30d158;
+  --ft-ui-accent-strong: #248a3d;
+  --ft-ui-accent-soft: rgba(48,209,88,.14);
+  --ft-ui-danger: #ff453a;
+  --ft-ui-warning: #ff9f0a;
+  --ft-ui-overlay: rgba(0,0,0,.58);
+  --ft-ui-control: #2c2c2e;
+  --ft-ui-control-active: #3a3a3c;
+  --ft-ui-radius-sm: 10px;
+  --ft-ui-radius-md: 12px;
+  --ft-ui-radius-lg: 16px;
+  --ft-ui-radius-xl: 20px;
+  --ft-ui-radius-pill: 999px;
+  --ft-ui-shadow-sm: 0 1px 3px rgba(0,0,0,.16);
+  --ft-ui-shadow-md: 0 8px 24px rgba(0,0,0,.18);
+  --ft-ui-shadow-lg: 0 16px 40px rgba(0,0,0,.28);
+  --ft-ui-space-1: 4px;
+  --ft-ui-space-2: 8px;
+  --ft-ui-space-3: 12px;
+  --ft-ui-space-4: 16px;
+  --ft-ui-space-5: 20px;
+  --ft-ui-space-6: 24px;
+  --ft-ui-space-7: 32px;
+  --ft-ui-control-h: 44px;
+  --ft-ui-header-h: 56px;
+  --ft-ui-header-side: 44px;
+}
+
+body.light-mode {
+  --ft-ui-bg: #f2f2f7;
+  --ft-ui-surface: #ffffff;
+  --ft-ui-surface-2: #f2f2f7;
+  --ft-ui-surface-3: #e5e5ea;
+  --ft-ui-text: #1c1c1e;
+  --ft-ui-text-2: #636366;
+  --ft-ui-text-3: #8e8e93;
+  --ft-ui-separator: rgba(60,60,67,.18);
+  --ft-ui-separator-strong: rgba(60,60,67,.28);
+  --ft-ui-accent: #248a3d;
+  --ft-ui-accent-strong: #1f6f32;
+  --ft-ui-accent-soft: rgba(36,138,61,.12);
+  --ft-ui-danger: #d70015;
+  --ft-ui-warning: #a95100;
+  --ft-ui-overlay: rgba(0,0,0,.34);
+  --ft-ui-control: #e5e5ea;
+  --ft-ui-control-active: #d1d1d6;
+  --ft-ui-shadow-sm: 0 1px 3px rgba(0,0,0,.08);
+  --ft-ui-shadow-md: 0 8px 24px rgba(0,0,0,.10);
+  --ft-ui-shadow-lg: 0 16px 40px rgba(0,0,0,.16);
+}
+
+/* Global visual tokens are intentionally mapped here at the final cascade layer. */
+html,
+body,
+#app,
+button,
+input,
+select,
+textarea,
+optgroup {
+  font-family: var(--ft-ui-font) !important;
+  font-synthesis: none !important;
+}
+
+body {
+  background: var(--ft-ui-bg) !important;
+  color: var(--ft-ui-text) !important;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Remove the old green gradient as a visual dependency without changing button semantics. */
+body {
+  --bg: var(--ft-ui-bg) !important;
+  --card-bg: var(--ft-ui-surface) !important;
+  --input-bg: var(--ft-ui-surface-2) !important;
+  --text: var(--ft-ui-text) !important;
+  --subtext: var(--ft-ui-text-2) !important;
+  --border: var(--ft-ui-separator) !important;
+  --button-gray: var(--ft-ui-control) !important;
+  --button-green: var(--ft-ui-accent) !important;
+  --positive: var(--ft-ui-accent) !important;
+  --negative: var(--ft-ui-danger) !important;
+  --accent-gradient: var(--ft-ui-accent) !important;
+  --modal-overlay: var(--ft-ui-overlay) !important;
+  --ft-bg: var(--ft-ui-bg) !important;
+  --ft-surface: var(--ft-ui-surface) !important;
+  --ft-surface-secondary: var(--ft-ui-surface-2) !important;
+  --ft-text: var(--ft-ui-text) !important;
+  --ft-text-secondary: var(--ft-ui-text-2) !important;
+  --ft-text-tertiary: var(--ft-ui-text-3) !important;
+  --ft-border: var(--ft-ui-separator) !important;
+  --ft-accent: var(--ft-ui-accent) !important;
+  --ft-accent-pressed: var(--ft-ui-accent-strong) !important;
+  --ft-overlay: var(--ft-ui-overlay) !important;
+  --ft-radius-sm: var(--ft-ui-radius-sm) !important;
+  --ft-radius-md: var(--ft-ui-radius-md) !important;
+  --ft-radius-lg: var(--ft-ui-radius-xl) !important;
+  --ft-radius-pill: var(--ft-ui-radius-pill) !important;
+  --ft-shadow-sm: var(--ft-ui-shadow-sm) !important;
+  --ft-shadow-md: var(--ft-ui-shadow-md) !important;
+  --ft-shadow-lg: var(--ft-ui-shadow-lg) !important;
+}
+
+/* ---------- Global controls ---------- */
+button,
+.btn,
+.button,
+.action-btn {
+  min-height: var(--ft-ui-control-h);
+  border-radius: var(--ft-ui-radius-md);
+  font-family: var(--ft-ui-font) !important;
+  font-weight: 600;
+  letter-spacing: -.005em;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color .16s ease, border-color .16s ease, color .16s ease, opacity .16s ease, transform .12s ease;
+}
+
+button:active,
+.btn:active,
+.button:active,
+.action-btn:active {
+  transform: scale(.985);
+}
+
+button:focus-visible,
+.btn:focus-visible,
+.button:focus-visible,
+.action-btn:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ft-ui-accent) 82%, transparent) !important;
+  outline-offset: 2px !important;
+}
+
+button:disabled,
+.btn:disabled,
+.button:disabled,
+.action-btn:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled,
+[aria-disabled="true"] {
+  opacity: .45 !important;
+  transform: none !important;
+}
+
+button.gray,
+button.outline,
+.small-btn,
+.body-settings-btn,
+.measurement-manager-row button {
+  box-shadow: none !important;
+}
+
+button.gray {
+  background: var(--ft-ui-control) !important;
+  border: 1px solid var(--ft-ui-separator) !important;
+  color: var(--ft-ui-text) !important;
+}
+
+button.outline {
+  background: transparent !important;
+  border: 1px solid color-mix(in srgb, var(--ft-ui-accent) 60%, var(--ft-ui-separator)) !important;
+  color: var(--ft-ui-accent) !important;
+}
+
+/* ---------- Forms ---------- */
+input,
+select,
+textarea {
+  min-height: var(--ft-ui-control-h);
+  border: 1px solid var(--ft-ui-separator) !important;
+  border-radius: var(--ft-ui-radius-md) !important;
+  background: var(--ft-ui-surface-2) !important;
+  color: var(--ft-ui-text) !important;
+  font-size: 16px !important;
+  line-height: 1.25 !important;
+  box-shadow: none !important;
+  caret-color: var(--ft-ui-accent);
+}
+
+textarea {
+  min-height: 96px;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--ft-ui-text-3) !important;
+  opacity: 1;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: color-mix(in srgb, var(--ft-ui-accent) 62%, var(--ft-ui-separator)) !important;
+}
+
+/* ---------- Screens ---------- */
+#app > [id$="Screen"] {
+  background: var(--ft-ui-bg) !important;
+  color: var(--ft-ui-text) !important;
+}
+
+#app > [id$="Screen"] > .screen-header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 200 !important;
+  display: grid !important;
+  grid-template-columns: var(--ft-ui-header-side) minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: var(--ft-ui-space-2) !important;
+  width: 100% !important;
+  height: var(--ft-ui-header-h) !important;
+  min-height: var(--ft-ui-header-h) !important;
+  max-height: none !important;
+  padding: var(--ft-ui-space-2) var(--ft-ui-space-4) !important;
+  background: color-mix(in srgb, var(--ft-ui-bg) 88%, transparent) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+}
+
+#app > [id$="Screen"] > .screen-header > button:first-child {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  justify-self: start !important;
+  width: var(--ft-ui-header-side) !important;
+  min-width: var(--ft-ui-header-side) !important;
+  max-width: var(--ft-ui-header-side) !important;
+  height: var(--ft-ui-header-side) !important;
+  min-height: var(--ft-ui-header-side) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: var(--ft-ui-radius-md) !important;
+  background: transparent !important;
+  color: var(--ft-ui-accent) !important;
+  font-size: 0 !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+  white-space: nowrap;
+}
+
+#app > [id$="Screen"] > .screen-header > button:first-child::first-letter {
+  font-size: 24px;
+}
+
+#app > [id$="Screen"] > .screen-header > button:first-child {
+  text-indent: -9999px;
+  overflow: visible !important;
+  position: relative;
+}
+
+#app > [id$="Screen"] > .screen-header > button:first-child::after {
+  content: "‹";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-indent: 0;
+  color: var(--ft-ui-accent);
+  font-size: 34px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+#app > [id$="Screen"] > .screen-header > .title {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  justify-self: stretch !important;
+  align-self: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  color: var(--ft-ui-text) !important;
+  -webkit-text-fill-color: var(--ft-ui-text) !important;
+  background: none !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  line-height: 1.18 !important;
+  letter-spacing: -.015em !important;
+  text-align: center !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  text-overflow: clip !important;
+}
+
+#app > [id$="Screen"] > .screen-header > .title .section-title-icon {
+  display: none !important;
+}
+
+#app > [id$="Screen"] > .screen-header > .screen-header-spacer {
+  display: none !important;
+}
+
+/* Home is intentionally excluded from the generic navigation header. */
+#homeScreen > .screen-header,
+#workoutScreen > .screen-header {
+  position: static !important;
+}
+
+/* ---------- Surfaces / cards ---------- */
+.card,
+.panel,
+.content-card,
+.progress-section,
+.analysis-card,
+.body-hero-card,
+.body-comparison-card,
+.body-history-card,
+.centered-card,
+.timer-box {
+  background: var(--ft-ui-surface) !important;
+  border: 1px solid var(--ft-ui-separator) !important;
+  border-radius: var(--ft-ui-radius-lg) !important;
+  box-shadow: var(--ft-ui-shadow-sm) !important;
+  color: var(--ft-ui-text) !important;
+}
+
+.card:active {
+  transform: none;
+}
+
+/* ---------- Tabs / segmented controls ---------- */
+.tabs,
+.stats-tabs,
+.directory-tabs,
+.food-main-tabs {
+  gap: var(--ft-ui-space-2) !important;
+}
+
+.tabs .tab,
+.stats-tab,
+.directory-tab,
+.food-main-tabs button {
+  min-height: 40px !important;
+  margin: 0 !important;
+  padding: 0 12px !important;
+  border: 0 !important;
+  border-radius: var(--ft-ui-radius-md) !important;
+  background: var(--ft-ui-surface-2) !important;
+  color: var(--ft-ui-text-2) !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+}
+
+.tabs .tab.active,
+.stats-tab.active,
+.directory-tab.active,
+.food-main-tabs button.active {
+  background: var(--ft-ui-accent-soft) !important;
+  color: var(--ft-ui-accent) !important;
+  border: 0 !important;
+}
+
+.tabs .tab:active,
+.stats-tab:active,
+.directory-tab:active,
+.food-main-tabs button:active {
+  background: var(--ft-ui-control-active) !important;
+}
+
+/* ---------- Unified modal / workspace surfaces ---------- */
+.catalog-modal,
+.confirm-modal,
+.ft-window-root.ft-window-dialog {
+  background: var(--ft-ui-overlay) !important;
+}
+
+.catalog-modal-content,
+.confirm-modal-content,
+.theme-modal-content,
+.exercise-modal-content,
+.date-modal-content,
+.workout-detail-content,
+.manual-workout-content,
+.achievements-content,
+.food-modal-content,
+.modal-stack-content,
+.chart-modal-content,
+.measurement-manager-modal-content {
+  background: var(--ft-ui-surface) !important;
+  color: var(--ft-ui-text) !important;
+  border: 1px solid var(--ft-ui-separator) !important;
+  border-radius: var(--ft-ui-radius-xl) !important;
+  box-shadow: var(--ft-ui-shadow-lg) !important;
+}
+
+.ft-window-root.ft-window-workspace,
+.technique-modal {
+  background: var(--ft-ui-bg) !important;
+  color: var(--ft-ui-text) !important;
+}
+
+.ft-window-root.ft-window-workspace .unified-surface-header,
+.ft-window-root.ft-window-workspace .ft-modal-header,
+.technique-modal .unified-surface-header,
+.technique-modal .ft-modal-header {
+  grid-template-columns: var(--ft-ui-header-side) minmax(0, 1fr) !important;
+  height: var(--ft-ui-header-h) !important;
+  min-height: var(--ft-ui-header-h) !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: var(--ft-ui-space-2) var(--ft-ui-space-4) !important;
+  gap: var(--ft-ui-space-2) !important;
+  background: color-mix(in srgb, var(--ft-ui-bg) 88%, transparent) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+}
+
+.ft-window-root.ft-window-workspace .unified-surface-header > .surface-back-btn,
+.ft-window-root.ft-window-workspace .ft-modal-header > .surface-back-btn,
+.technique-modal .unified-surface-header > .surface-back-btn {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  justify-self: start !important;
+  width: var(--ft-ui-header-side) !important;
+  min-width: var(--ft-ui-header-side) !important;
+  max-width: var(--ft-ui-header-side) !important;
+  height: var(--ft-ui-header-side) !important;
+  min-height: var(--ft-ui-header-side) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: var(--ft-ui-radius-md) !important;
+  background: transparent !important;
+  color: var(--ft-ui-accent) !important;
+  font-size: 0 !important;
+  box-shadow: none !important;
+  position: relative !important;
+}
+
+.ft-window-root.ft-window-workspace .unified-surface-header > .surface-back-btn::after,
+.ft-window-root.ft-window-workspace .ft-modal-header > .surface-back-btn::after,
+.technique-modal .unified-surface-header > .surface-back-btn::after {
+  content: "‹";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  color: var(--ft-ui-accent);
+  font-size: 34px;
+  font-weight: 300;
+}
+
+.ft-window-root.ft-window-workspace .unified-surface-header > .surface-title,
+.ft-window-root.ft-window-workspace .ft-modal-header > .surface-title,
+.ft-window-root.ft-window-workspace .unified-surface-header > .chart-modal-title,
+.technique-modal .unified-surface-header > .surface-title {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  justify-self: stretch !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: var(--ft-ui-text) !important;
+  -webkit-text-fill-color: var(--ft-ui-text) !important;
+  background: none !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  line-height: 1.18 !important;
+  letter-spacing: -.015em !important;
+  text-align: center !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  text-overflow: clip !important;
+}
+
+.ft-window-root.ft-window-workspace .unified-surface-header > .surface-header-spacer,
+.ft-window-root.ft-window-workspace .ft-modal-header > .surface-header-spacer,
+.technique-modal .unified-surface-header > .surface-header-spacer {
+  display: none !important;
+}
+
+/* Header close controls use the same visual back affordance where the existing
+   markup is a close-only control. The click handler remains untouched. */
+.ft-window-root.ft-window-workspace .unified-surface-header-close > .surface-close-btn,
+.ft-window-root.ft-window-workspace .unified-surface-header-close > .close-btn,
+.ft-window-root.ft-window-workspace .unified-surface-header-close > .modal-close-btn {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  width: var(--ft-ui-header-side) !important;
+  min-width: var(--ft-ui-header-side) !important;
+  height: var(--ft-ui-header-side) !important;
+  min-height: var(--ft-ui-header-side) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: var(--ft-ui-radius-md) !important;
+  background: transparent !important;
+  color: transparent !important;
+  font-size: 0 !important;
+  position: static !important;
+}
+
+.ft-window-root.ft-window-workspace .unified-surface-header-close > .surface-close-btn::after,
+.ft-window-root.ft-window-workspace .unified-surface-header-close > .close-btn::after,
+.ft-window-root.ft-window-workspace .unified-surface-header-close > .modal-close-btn::after {
+  content: "‹" !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  height: 100% !important;
+  color: var(--ft-ui-accent) !important;
+  font-size: 34px !important;
+  font-weight: 300 !important;
+}
+
+/* Dialog actions: iOS-style stacked actions without changing button order. */
+.confirm-modal-content,
+.ft-window-root.ft-window-dialog .confirm-modal-content {
+  padding: var(--ft-ui-space-6) !important;
+}
+
+.confirm-modal-content button {
+  border-radius: var(--ft-ui-radius-md) !important;
+}
+
+/* ---------- Lists / rows ---------- */
+.history-item,
+.food-item,
+.progress-item,
+.measurement-item,
+.measurement-field-row,
+.food-preset-item {
+  border-color: var(--ft-ui-separator) !important;
+}
+
+.food-preset-list {
+  background: var(--ft-ui-surface) !important;
+  border: 1px solid var(--ft-ui-separator) !important;
+  box-shadow: var(--ft-ui-shadow-md) !important;
+}
+
+.food-preset-item:hover,
+.food-preset-item:active {
+  background: var(--ft-ui-control-active) !important;
+}
+
+/* ---------- Workout ---------- */
+#workoutScreen {
+  background: var(--ft-ui-bg) !important;
+}
+
+#workoutScreen .workout-topbar {
+  background: color-mix(in srgb, var(--ft-ui-bg) 90%, transparent) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+}
+
+#workoutScreen .workout-head {
+  grid-template-columns: var(--ft-ui-header-side) minmax(0,1fr) 64px !important;
+  min-height: var(--ft-ui-header-h) !important;
+}
+
+#workoutScreen .workout-close {
+  width: var(--ft-ui-header-side) !important;
+  min-width: var(--ft-ui-header-side) !important;
+  height: var(--ft-ui-header-side) !important;
+  min-height: var(--ft-ui-header-side) !important;
+  border: 0 !important;
+  border-radius: var(--ft-ui-radius-md) !important;
+  background: transparent !important;
+  color: var(--ft-ui-accent) !important;
+  box-shadow: none !important;
+  font-size: 0 !important;
+  position: relative !important;
+}
+
+#workoutScreen .workout-close::after {
+  content: "×";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 30px;
+  font-weight: 300;
+}
+
+#workoutScreen .workout-time {
+  border: 0 !important;
+  border-radius: var(--ft-ui-radius-md) !important;
+  background: var(--ft-ui-surface-2) !important;
+  color: var(--ft-ui-text-2) !important;
+  box-shadow: none !important;
+}
+
+#workoutScreen .workout-exercise-card,
+#workoutScreen .workout-set-row,
+#workoutScreen .workout-last-result {
+  background: var(--ft-ui-surface) !important;
+  border-color: var(--ft-ui-separator) !important;
+  box-shadow: var(--ft-ui-shadow-sm) !important;
+}
+
+#workoutScreen .workout-set-row input {
+  background: var(--ft-ui-surface-2) !important;
+  border-color: var(--ft-ui-separator) !important;
+}
+
+#workoutScreen #exerciseStrip .exercise-dot {
+  background: var(--ft-ui-surface-2) !important;
+  border: 0 !important;
+  color: var(--ft-ui-text-2) !important;
+}
+
+#workoutScreen #exerciseStrip .exercise-dot.active {
+  background: var(--ft-ui-accent-soft) !important;
+  border: 0 !important;
+  color: var(--ft-ui-accent) !important;
+}
+
+/* ---------- Accent components ---------- */
+.big-number,
+.total-timer,
+.best-value {
+  color: var(--ft-ui-accent) !important;
+}
+
+.exercise-dot.done {
+  background: var(--ft-ui-accent-soft) !important;
+  color: var(--ft-ui-accent) !important;
+}
+
+/* ---------- Light-theme contrast corrections ---------- */
+body.light-mode .subtitle,
+body.light-mode .field-label,
+body.light-mode .best-label,
+body.light-mode .chart-range-caption,
+body.light-mode .measurement-modal-note {
+  color: var(--ft-ui-text-2) !important;
+}
+
+body.light-mode .card,
+body.light-mode .panel,
+body.light-mode .content-card,
+body.light-mode .progress-section,
+body.light-mode .analysis-card,
+body.light-mode .body-hero-card,
+body.light-mode .body-comparison-card,
+body.light-mode .body-history-card,
+body.light-mode .centered-card,
+body.light-mode .timer-box {
+  box-shadow: var(--ft-ui-shadow-sm) !important;
+}
+
+/* ---------- Responsive / safe-area ---------- */
+#app > [id$="Screen"] > .screen-header,
+.ft-window-root.ft-window-workspace .unified-surface-header,
+.ft-window-root.ft-window-workspace .ft-modal-header,
+#workoutScreen > .workout-topbar {
+  padding-top: max(8px, env(safe-area-inset-top)) !important;
+  height: calc(var(--ft-ui-header-h) + env(safe-area-inset-top)) !important;
+  min-height: calc(var(--ft-ui-header-h) + env(safe-area-inset-top)) !important;
+}
+
+#app > [id$="Screen"] > .screen-header {
+  padding-left: max(var(--ft-ui-space-4), env(safe-area-inset-left)) !important;
+  padding-right: max(var(--ft-ui-space-4), env(safe-area-inset-right)) !important;
+}
+
+@media (max-width: 430px) {
+  :root {
+    --ft-ui-header-side: 40px;
+  }
+
+  #app > [id$="Screen"] > .screen-header > .title,
+  .ft-window-root.ft-window-workspace .unified-surface-header > .surface-title,
+  .ft-window-root.ft-window-workspace .ft-modal-header > .surface-title,
+  .technique-modal .unified-surface-header > .surface-title {
+    font-size: 19px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* ========================================================================
+   FTracker UI corrective pass — theme contrast / navigation / FScore ring
+   Visual-only overrides. No JS, DOM or business logic changes.
+   ======================================================================== */
+
+/* Navigation buttons: keep the real accessible Russian label visible.
+   Do not replace it with a pseudo-element; this works consistently in Safari/PWA. */
+#app > [id$="Screen"] > .screen-header > button:first-child,
+.ft-window-root.ft-window-workspace .unified-surface-header > .surface-back-btn,
+.ft-window-root.ft-window-workspace .ft-modal-header > .surface-back-btn,
+.technique-modal .unified-surface-header > .surface-back-btn {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  text-indent: 0 !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  color: var(--ft-ui-accent) !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+
+#app > [id$="Screen"] > .screen-header > button:first-child::after,
+.ft-window-root.ft-window-workspace .unified-surface-header > .surface-back-btn::after,
+.ft-window-root.ft-window-workspace .ft-modal-header > .surface-back-btn::after,
+.technique-modal .unified-surface-header > .surface-back-btn::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Close-only controls keep their native label/accessible glyph instead of
+   becoming transparent. */
+.ft-window-root.ft-window-workspace .unified-surface-header-close > .surface-close-btn,
+.ft-window-root.ft-window-workspace .unified-surface-header-close > .close-btn,
+.ft-window-root.ft-window-workspace .unified-surface-header-close > .modal-close-btn {
+  color: var(--ft-ui-text) !important;
+  font-size: 20px !important;
+  text-indent: 0 !important;
+}
+
+.ft-window-root.ft-window-workspace .unified-surface-header-close > .surface-close-btn::after,
+.ft-window-root.ft-window-workspace .unified-surface-header-close > .close-btn::after,
+.ft-window-root.ft-window-workspace .unified-surface-header-close > .modal-close-btn::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Strong, explicit theme colors for common textual UI. */
+:root {
+  --ft-ui-fscore-track: rgba(255,255,255,.12);
+  --ft-ui-fscore-inner: #1c1c1e;
+  --ft-ui-fscore-copy: #f5f5f7;
+}
+
+body.light-mode {
+  --ft-ui-fscore-track: rgba(60,60,67,.16);
+  --ft-ui-fscore-inner: #ffffff;
+  --ft-ui-fscore-copy: #1c1c1e;
+}
+
+/* FScore home ring */
+#fscoreHomeWidget .fscore-home-ring {
+  --fscore-ring-color: var(--ft-ui-accent) !important;
+  background: conic-gradient(var(--ft-ui-accent) var(--fscore-value), var(--ft-ui-fscore-track) 0) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ft-ui-accent) 18%, transparent) !important;
+}
+
+#fscoreHomeWidget .fscore-home-ring-inner {
+  background: var(--ft-ui-fscore-inner) !important;
+  box-shadow: inset 0 0 0 1px var(--ft-ui-separator) !important;
+}
+
+#fscoreHomeWidget .fscore-home-ring-inner b,
+#fscoreHomeWidget .fscore-home-ring-inner small {
+  color: var(--ft-ui-fscore-copy) !important;
+}
+
+#fscoreHomeWidget .fscore-home-title,
+#fscoreHomeWidget .fscore-home-goal,
+#fscoreHomeWidget .fscore-home-status b,
+#fscoreHomeWidget .fscore-home-action,
+#fscoreHomeWidget .fscore-home-breakdown-label,
+#fscoreHomeWidget .fscore-home-breakdown-value {
+  color: var(--ft-ui-text) !important;
+}
+
+#fscoreHomeWidget .fscore-home-status-text,
+#fscoreHomeWidget .fscore-home-delta small,
+#fscoreHomeWidget .fscore-home-breakdown-item small {
+  color: var(--ft-ui-text-2) !important;
+}
+
+#fscoreHomeWidget .fscore-home-breakdown-bar {
+  background: var(--ft-ui-control) !important;
+}
+
+#fscoreHomeWidget .fscore-home-breakdown-bar i {
+  background: var(--ft-ui-accent) !important;
+}
+
+/* FScore analytics ring */
+#fscoreAnalyticsScreen .fscore-analytics-ring {
+  background: conic-gradient(var(--ft-ui-accent) var(--fscore-ring), var(--ft-ui-fscore-track) 0) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ft-ui-accent) 18%, transparent) !important;
+}
+
+#fscoreAnalyticsScreen .fscore-analytics-ring::before {
+  background: var(--ft-ui-fscore-inner) !important;
+  box-shadow: inset 0 0 0 1px var(--ft-ui-separator) !important;
+}
+
+#fscoreAnalyticsScreen .fscore-analytics-ring strong,
+#fscoreAnalyticsScreen .fscore-analytics-ring small,
+#fscoreAnalyticsScreen .fscore-analytics-ring-copy > b {
+  color: var(--ft-ui-text) !important;
+}
+
+#fscoreAnalyticsScreen .fscore-analytics-ring-copy > span,
+#fscoreAnalyticsScreen .fscore-analytics-ring-copy > em {
+  color: var(--ft-ui-text-2) !important;
+}
+
+#fscoreAnalyticsScreen .fscore-analytics-ring-copy > em {
+  background: var(--ft-ui-accent-soft) !important;
+}
+
+/* Explicit light-theme correction for legacy dark hardcoded surfaces/text. */
+body.light-mode .fscore-widget,
+body.light-mode .fscore-panel,
+body.light-mode .fscore-goal-panel,
+body.light-mode .fscore-score-panel,
+body.light-mode .fscore-composition-panel,
+body.light-mode .fscore-reasons-panel,
+body.light-mode .fscore-method-panel,
+body.light-mode .fscore-target-card,
+body.light-mode .fscore-custom-section,
+body.light-mode .fscore-factor-weight-section,
+body.light-mode .fscore-training-weight-editor,
+body.light-mode .fscore-confidence-missing,
+body.light-mode .fscore-confidence-complete {
+  color: var(--ft-ui-text) !important;
+  border-color: var(--ft-ui-separator) !important;
+}
+
+body.light-mode .fscore-widget,
+body.light-mode .fscore-panel,
+body.light-mode .fscore-custom-section {
+  background: var(--ft-ui-surface) !important;
+}
+
+body.light-mode .fscore-target-card,
+body.light-mode .fscore-factor-weight-section,
+body.light-mode .fscore-training-weight-editor {
+  background: var(--ft-ui-surface-2) !important;
+}
+
+body.light-mode .fscore-target-value-cell > strong,
+body.light-mode .fscore-target-value-cell > div {
+  background: var(--ft-ui-surface-3) !important;
+  color: var(--ft-ui-text) !important;
+}
+
+body.light-mode .fscore-target-rules span,
+body.light-mode .fscore-target-corridor,
+body.light-mode .fscore-nutrition-default-note {
+  background: var(--ft-ui-surface-2) !important;
+  color: var(--ft-ui-text-2) !important;
+}
+
+/* General legacy text classes that otherwise inherit dark-theme colors. */
+body.light-mode .fscore-subtitle,
+body.light-mode .fscore-empty,
+body.light-mode .fscore-method-section,
+body.light-mode .fscore-method-item span,
+body.light-mode .fscore-status-reason span,
+body.light-mode .fscore-confidence-missing,
+body.light-mode .fscore-target-value-cell > span,
+body.light-mode .fscore-factor-weight-heading span,
+body.light-mode .fscore-training-weight-head,
+body.light-mode .fscore-custom-training label,
+body.light-mode .fscore-custom-kbju label,
+body.light-mode .fscore-custom-weights label,
+body.light-mode .fscore-target-rules {
+  color: var(--ft-ui-text-2) !important;
+}
+
+body.light-mode .fscore-method-item b,
+body.light-mode .fscore-status-reason b,
+body.light-mode .fscore-target-name,
+body.light-mode .fscore-factor-weight-heading b,
+body.light-mode .fscore-factor-weight-heading > strong,
+body.light-mode .fscore-method-sub summary,
+body.light-mode .fscore-custom-section > summary {
+  color: var(--ft-ui-text) !important;
+}
+
+/* Borders must remain visible in light mode. */
+body.light-mode .card,
+body.light-mode .panel,
+body.light-mode .content-card,
+body.light-mode .progress-section,
+body.light-mode .analysis-card,
+body.light-mode .body-hero-card,
+body.light-mode .body-comparison-card,
+body.light-mode .body-history-card,
+body.light-mode .centered-card,
+body.light-mode .timer-box,
+body.light-mode input,
+body.light-mode select,
+body.light-mode textarea,
+body.light-mode .fscore-panel,
+body.light-mode .fscore-target-card,
+body.light-mode .fscore-custom-section {
+  border-color: var(--ft-ui-separator-strong) !important;
+}
+
+body.light-mode button.gray {
+  background: #e5e5ea !important;
+  color: #1c1c1e !important;
+  border-color: rgba(60,60,67,.22) !important;
+}
+
+body.light-mode button.outline {
+  background: #ffffff !important;
+  color: var(--ft-ui-accent-strong) !important;
+  border-color: rgba(36,138,61,.45) !important;
+}
+
+body.light-mode .tabs .tab,
+body.light-mode .stats-tab,
+body.light-mode .directory-tab,
+body.light-mode .food-main-tabs button {
+  color: var(--ft-ui-text-2) !important;
+  background: #e5e5ea !important;
+  border: 1px solid rgba(60,60,67,.12) !important;
+}
+
+body.light-mode .tabs .tab.active,
+body.light-mode .stats-tab.active,
+body.light-mode .directory-tab.active,
+body.light-mode .food-main-tabs button.active {
+  color: var(--ft-ui-accent-strong) !important;
+  background: rgba(36,138,61,.12) !important;
+  border-color: rgba(36,138,61,.28) !important;
+}
+
+/* Do not let old white-on-dark declarations leak into light mode. */
+body.light-mode .workout-exercise-card,
+body.light-mode .workout-set-row,
+body.light-mode .workout-last-result,
+body.light-mode .workout-time,
+body.light-mode .exercise-dot {
+  color: var(--ft-ui-text) !important;
+}
+
+body.light-mode #workoutScreen .workout-exercise-card,
+body.light-mode #workoutScreen .workout-set-row,
+body.light-mode #workoutScreen .workout-last-result {
+  background: var(--ft-ui-surface) !important;
+  border-color: var(--ft-ui-separator-strong) !important;
+}
+
+body.light-mode #workoutScreen .workout-set-row input {
+  background: var(--ft-ui-surface-2) !important;
+  color: var(--ft-ui-text) !important;
+  border-color: var(--ft-ui-separator-strong) !important;
+}
