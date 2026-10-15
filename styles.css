@@ -4735,3 +4735,43 @@ body.light-mode #workoutScreen .workout-set-row input {
   color: var(--ft-ui-text) !important;
   border-color: var(--ft-ui-separator-strong) !important;
 }
+
+
+/* v1.8.87: precise workout set hit targets on iOS/PWA. The row DOM has three direct children: number, inputs wrapper, delete button. */
+#workoutScreen .set-row.workout-set-row {
+  display: grid !important;
+  grid-template-columns: 28px minmax(0, 1fr) 36px !important;
+  gap: 7px !important;
+  align-items: center !important;
+  position: relative !important;
+  transform: none !important;
+  touch-action: manipulation;
+}
+#workoutScreen .workout-set-row .workout-set-inputs {
+  grid-column: 2 !important;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  gap: 7px !important;
+}
+#workoutScreen .workout-set-row .workout-set-inputs.horizontal.single {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+#workoutScreen .workout-set-row .workout-set-inputs input {
+  position: relative !important;
+  z-index: 1 !important;
+  display: block !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  pointer-events: auto !important;
+  touch-action: manipulation;
+  transform: none !important;
+}
+#workoutScreen .workout-set-row .set-delete-btn {
+  grid-column: 3 !important;
+  justify-self: stretch !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
