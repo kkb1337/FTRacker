@@ -1,4 +1,4 @@
-/* FTracker v1.8.86 — Workout replacement/create state fix.
+/* FTracker v1.8.88 — iOS workout input focus and hit-target fix.
    Consolidated from the audited inline runtimes without changing their order. */
 
 /* ===== CONSOLIDATED RUNTIME BLOCK 1 ===== */
@@ -6580,7 +6580,7 @@ function showToast(msg) {
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1.8.86', {updateViaCache:'none'}).catch(() => {});
+        navigator.serviceWorker.register('./sw.js?v=1.8.88', {updateViaCache:'none'}).catch(() => {});
     });
 }
 
@@ -11527,7 +11527,7 @@ async function clearTemporaryFiles(){
     if(typeof showToast==='function') showToast('Все данные приложения очищены. Перезапуск…');
     setTimeout(()=>{
       // Force the current clean app shell to initialise data from defaults.
-      location.replace(location.pathname+'?v=1.8.86&reset='+Date.now());
+      location.replace(location.pathname+'?v=1.8.88&reset='+Date.now());
     },250);
   }catch(err){
     console.error('Full application reset failed',err);
@@ -11615,4 +11615,69 @@ async function clearTemporaryFiles(){
     #progressScreen .progress-ex-history-row{background:var(--card-bg)!important;color:var(--text)!important;border:1px solid var(--border)!important;box-shadow:none!important;}
     #progressScreen .progress-ex-history-row.is-clickable{background:var(--card-bg)!important;}
   `; document.head.appendChild(st);
+})();
+
+
+/* FTracker v1.8.88 — iOS PWA workout input hit-target stabilization.
+   Do not rebuild the workout rows while editing. Keep the tapped input visible
+   when Safari changes the visual viewport for its software keyboard. */
+(function(){
+  'use strict';
+  let activeWorkoutInput = null;
+  let focusScrollFrame = 0;
+  const isWorkoutInput = el => !!(el && el.matches && el.matches('#workoutScreen #setsList .workout-set-row input'));
+  function keepFocusedInputVisible(el){
+    if(!isWorkoutInput(el) || !el.isConnected) return;
+    cancelAnimationFrame(focusScrollFrame);
+    focusScrollFrame=requestAnimationFrame(()=>{
+      if(!el.isConnected || document.activeElement!==el) return;
+      const vv=window.visualViewport;
+      const top=vv ? vv.offsetTop : 0;
+      const bottom=top+(vv ? vv.height : window.innerHeight);
+      const r=el.getBoundingClientRect();
+      const margin=14;
+      let delta=0;
+      if(r.bottom>bottom-margin) delta=r.bottom-(bottom-margin);
+      else if(r.top<top+margin) delta=r.top-(top+margin);
+      if(delta){
+        const screen=document.getElementById('workoutScreen');
+        const scroller=document.getElementById('exerciseContainer');
+        if(scroller && scroller.contains(el)) scroller.scrollTop+=delta;
+        else if(screen) screen.scrollTop+=delta;
+      }
+    });
+  }
+  document.addEventListener('focusin',e=>{
+    if(!isWorkoutInput(e.target)) return;
+    activeWorkoutInput=e.target;
+    // Give iOS one frame to settle its focus/keyboard geometry before scrolling.
+    requestAnimationFrame(()=>keepFocusedInputVisible(e.target));
+  },true);
+  document.addEventListener('focusout',e=>{
+    if(e.target===activeWorkoutInput) activeWorkoutInput=null;
+  },true);
+  document.addEventListener('touchend',e=>{
+    const el=e.target?.closest?.('#workoutScreen #setsList .workout-set-row input');
+    if(!el) return;
+    // Never redirect focus to a sibling: use the exact field under the touch.
+    if(document.activeElement!==el) el.focus({preventScroll:true});
+    activeWorkoutInput=el;
+    requestAnimationFrame(()=>keepFocusedInputVisible(el));
+  },{capture:true,passive:true});
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize',()=>{
+      if(activeWorkoutInput) keepFocusedInputVisible(activeWorkoutInput);
+    },{passive:true});
+    window.visualViewport.addEventListener('scroll',()=>{
+      if(activeWorkoutInput) keepFocusedInputVisible(activeWorkoutInput);
+    },{passive:true});
+  }
+  // Save each edit immediately, rather than waiting for blur/change when iOS
+  // moves focus as the keyboard is dismissed or the user taps another field.
+  document.addEventListener('input',e=>{
+    const el=e.target;
+    if(!isWorkoutInput(el)) return;
+    const match=String(el.getAttribute('onchange')||'').match(/updateSet\((\-?\d+),(\d+),'([^']+)'/);
+    if(match && typeof window.updateSet==='function') window.updateSet(Number(match[1]),Number(match[2]),match[3],el.value);
+  },true);
 })();
