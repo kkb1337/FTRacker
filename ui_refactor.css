@@ -951,3 +951,90 @@ html body #workoutScreen:not(.hidden) > #exerciseContainer {
   scroll-padding-bottom: calc(var(--ft-kb, 0px) + 24px);
   overscroll-behavior-y: contain !important;
 }
+
+/* ===== v1.8.90 — ONE canonical "← Назад" button for screens and modals =====
+   Before: 6 different sizes (76×44, 68×42, 68×40, 76×40, 64×42, 40×40) coming from
+   ~30 overlapping rules in styles.css (many keyed by #id). The label "← Назад" is
+   ~79px wide, so 76/68/64/40px boxes clipped it or shrank the tap area below the label.
+   The :is(#ftbN,*) groups only raise specificity above those legacy #id rules; they
+   match every element and change nothing else. */
+:root { --ft-back-w: 88px; --ft-back-h: 44px; --ft-window-side: 88px; }
+html body #app > [id$="Screen"] > .screen-header:is(#ftb1,*):is(#ftb2,*):is(#ftb3,*),
+html body .unified-surface-header:is(#ftb1,*):is(#ftb2,*):is(#ftb3,*),
+html body .ft-modal-header:is(#ftb1,*):is(#ftb2,*):is(#ftb3,*) {
+  grid-template-columns: var(--ft-back-w) minmax(0, 1fr) var(--ft-back-w) !important;
+}
+html body #app > [id$="Screen"] > .screen-header > button:first-child:is(#ftb1,*):is(#ftb2,*):is(#ftb3,*),
+html body .unified-surface-header > .surface-back-btn:is(#ftb1,*):is(#ftb2,*):is(#ftb3,*),
+html body .ft-modal-header > .surface-back-btn:is(#ftb1,*):is(#ftb2,*):is(#ftb3,*),
+html body button.surface-back-btn:is(#ftb1,*):is(#ftb2,*):is(#ftb3,*) {
+  grid-column: 1 !important;
+  justify-self: start !important;
+  box-sizing: border-box !important;
+  width: var(--ft-back-w) !important;
+  min-width: var(--ft-back-w) !important;
+  max-width: none !important;
+  height: var(--ft-back-h) !important;
+  min-height: var(--ft-back-h) !important;
+  margin: 0 !important;
+  padding: 0 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  text-align: center !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+}
+
+/* ===== v1.8.90 — text that did not fit its box ===== */
+/* Food tabs: "Статистика" (97px) was wider than its 86px equal-width tab. Size tabs to content. */
+html body .tabs.food-main-tabs > .tab:is(#ftb1,*):is(#ftb2,*):is(#ftb3,*) {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  padding: 0 6px !important;
+  font-size: 14px !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+}
+/* Index goals: "Поддержание" was clipped on both sides. Buttons grow to their label. */
+html body .fscore-goal-tabs:is(#ftb1,*):is(#ftb2,*):is(#ftb3,*) { display: flex !important; gap: 8px !important; }
+html body .fscore-goal-tabs > button:is(#ftb1,*):is(#ftb2,*):is(#ftb3,*) {
+  flex: 1 1 auto !important;
+  min-width: max-content !important;
+  padding: 0 8px !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+/* Long screen titles: one line, ellipsis as a safety net instead of a wrapped 2-line header. */
+html body .fscore-title:is(#ftb1,*):is(#ftb2,*):is(#ftb3,*),
+html body .fscore-title > span:is(#ftb1,*):is(#ftb2,*):is(#ftb3,*) { font-size: 17px !important; white-space: nowrap !important; text-align: center !important; }
+html body .fscore-title:is(#ftb1,*):is(#ftb2,*):is(#ftb3,*) { overflow: hidden !important; text-overflow: ellipsis !important; }
+/* Wide danger/utility buttons in Settings may wrap instead of being cut off. */
+html body #themeModal .theme-modal-content button.gray:is(#ftb1,*):is(#ftb2,*):is(#ftb3,*) {
+  white-space: normal !important; height: auto !important; min-height: 44px !important; line-height: 1.25 !important; padding-top: 10px !important; padding-bottom: 10px !important;
+}
+@media (max-width: 340px) {
+  html body .tabs.food-main-tabs > .tab:is(#ftb1,*):is(#ftb2,*):is(#ftb3,*) { font-size: 12.5px !important; padding: 0 3px !important; }
+  html body .progress-period-btn:is(#ftb1,*):is(#ftb2,*):is(#ftb3,*) { padding: 0 6px !important; font-size: 13px !important; }
+  html body .surface-title:is(#ftb1,*):is(#ftb2,*):is(#ftb3,*) { font-size: 19px !important; }
+  html body .fscore-goal-tabs > button b:is(#ftb1,*):is(#ftb2,*):is(#ftb3,*) { font-size: 10px !important; letter-spacing: -.02em !important; }
+}
+
+/* Workout timer was drawn as a frame inside a frame (.workout-top-right AND .workout-time both had border + fill). Keep only the inner chip. */
+html body #workoutScreen .workout-top-right:is(#ftb1,*):is(#ftb2,*):is(#ftb3,*) {
+  border: 0 !important; background: transparent !important; box-shadow: none !important; padding: 0 !important;
+}
+
+/* Index title on narrow phones: smaller, and on very narrow ones it may use the empty right column. */
+@media (max-width: 380px) {
+  html body .fscore-title:is(#ftb1,*):is(#ftb2,*):is(#ftb3,*),
+  html body .fscore-title > span:is(#ftb1,*):is(#ftb2,*):is(#ftb3,*) { font-size: 15px !important; }
+}
+@media (max-width: 340px) {
+  html body #app > #fscoreAnalyticsScreen > .screen-header > .fscore-title:is(#ftb1,*):is(#ftb2,*):is(#ftb3,*) { grid-column: 2 / 4 !important; }
+}

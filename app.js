@@ -1,4 +1,4 @@
-/* FTracker v1.8.89 — iOS workout input focus and hit-target fix.
+/* FTracker v1.8.90 — iOS workout input focus and hit-target fix.
    Consolidated from the audited inline runtimes without changing their order. */
 
 /* ===== CONSOLIDATED RUNTIME BLOCK 1 ===== */
@@ -6586,7 +6586,7 @@ function showToast(msg) {
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1.8.89', {updateViaCache:'none'}).catch(() => {});
+        navigator.serviceWorker.register('./sw.js?v=1.8.90', {updateViaCache:'none'}).catch(() => {});
     });
 }
 
@@ -11533,7 +11533,7 @@ async function clearTemporaryFiles(){
     if(typeof showToast==='function') showToast('Все данные приложения очищены. Перезапуск…');
     setTimeout(()=>{
       // Force the current clean app shell to initialise data from defaults.
-      location.replace(location.pathname+'?v=1.8.89&reset='+Date.now());
+      location.replace(location.pathname+'?v=1.8.90&reset='+Date.now());
     },250);
   }catch(err){
     console.error('Full application reset failed',err);
@@ -11624,7 +11624,7 @@ async function clearTemporaryFiles(){
 })();
 
 
-/* FTracker v1.8.89 — iOS PWA keyboard handling for workout inputs.
+/* FTracker v1.8.90 — iOS PWA keyboard handling for workout inputs.
    In an iOS standalone PWA the layout viewport does NOT shrink when the software
    keyboard opens; only window.visualViewport does. The workout scroller is pinned
    to the full-height layout viewport, so its bottom (and the fields) sat under the
