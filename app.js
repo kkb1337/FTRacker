@@ -1,4 +1,4 @@
-/* FTracker v1.8.88 — iOS workout input focus and hit-target fix.
+/* FTracker v1.8.89 — iOS workout input focus and hit-target fix.
    Consolidated from the audited inline runtimes without changing their order. */
 
 /* ===== CONSOLIDATED RUNTIME BLOCK 1 ===== */
@@ -4380,7 +4380,8 @@ function addSet() {
     }
 }
 function deleteSet(exIdx, setIdx) { if (!workoutSets[exIdx]?.[setIdx]) return; pendingDeleteType='workoutSet'; pendingDeleteIndex=exIdx; pendingDeleteDate=String(setIdx); showDeleteConfirm('Удалить этот подход?'); }
-function updateSet(exIdx, setIdx, field, value) {
+const prPendingSets = new WeakSet();
+function updateSet(exIdx, setIdx, field, value, live) {
     if (!workoutSets[exIdx] || !workoutSets[exIdx][setIdx]) return;
     const meta = getWorkoutExercise(exIdx);
     const type = meta?.type || 'strength';
@@ -4388,8 +4389,13 @@ function updateSet(exIdx, setIdx, field, value) {
     const wasComplete = isWorkoutSetFilledForResult(set,type);
     set[field] = value;
     const isComplete = isWorkoutSetFilledForResult(set,type);
-    if (!wasComplete && isComplete) {
-        checkPersonalRecord(exIdx,setIdx);
+    // live=true — вызов на каждый символ: значение ещё может быть неполным ("1" -> "100"),
+    // поэтому рекорд проверяем только когда ввод завершён (событие change).
+    if (isComplete && (!wasComplete || prPendingSets.has(set))) {
+        if (live) prPendingSets.add(set);
+        else { prPendingSets.delete(set); checkPersonalRecord(exIdx,setIdx); }
+    } else if (!live && prPendingSets.has(set)) {
+        prPendingSets.delete(set);
     }
     saveDraft();
     updateWorkoutCompletionUI();
@@ -6580,7 +6586,7 @@ function showToast(msg) {
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1.8.88', {updateViaCache:'none'}).catch(() => {});
+        navigator.serviceWorker.register('./sw.js?v=1.8.89', {updateViaCache:'none'}).catch(() => {});
     });
 }
 
@@ -11527,7 +11533,7 @@ async function clearTemporaryFiles(){
     if(typeof showToast==='function') showToast('Все данные приложения очищены. Перезапуск…');
     setTimeout(()=>{
       // Force the current clean app shell to initialise data from defaults.
-      location.replace(location.pathname+'?v=1.8.88&reset='+Date.now());
+      location.replace(location.pathname+'?v=1.8.89&reset='+Date.now());
     },250);
   }catch(err){
     console.error('Full application reset failed',err);
@@ -11618,66 +11624,84 @@ async function clearTemporaryFiles(){
 })();
 
 
-/* FTracker v1.8.88 — iOS PWA workout input hit-target stabilization.
-   Do not rebuild the workout rows while editing. Keep the tapped input visible
-   when Safari changes the visual viewport for its software keyboard. */
+/* FTracker v1.8.89 — iOS PWA keyboard handling for workout inputs.
+   In an iOS standalone PWA the layout viewport does NOT shrink when the software
+   keyboard opens; only window.visualViewport does. The workout scroller is pinned
+   to the full-height layout viewport, so its bottom (and the fields) sat under the
+   keyboard and could not be scrolled up. We publish the keyboard height as --ft-kb,
+   CSS adds it as bottom padding of the scroller, and the focused row is centred in
+   the part of the screen that is really visible. */
 (function(){
   'use strict';
-  let activeWorkoutInput = null;
-  let focusScrollFrame = 0;
-  const isWorkoutInput = el => !!(el && el.matches && el.matches('#workoutScreen #setsList .workout-set-row input'));
-  function keepFocusedInputVisible(el){
-    if(!isWorkoutInput(el) || !el.isConnected) return;
-    cancelAnimationFrame(focusScrollFrame);
-    focusScrollFrame=requestAnimationFrame(()=>{
-      if(!el.isConnected || document.activeElement!==el) return;
-      const vv=window.visualViewport;
-      const top=vv ? vv.offsetTop : 0;
-      const bottom=top+(vv ? vv.height : window.innerHeight);
-      const r=el.getBoundingClientRect();
-      const margin=14;
-      let delta=0;
-      if(r.bottom>bottom-margin) delta=r.bottom-(bottom-margin);
-      else if(r.top<top+margin) delta=r.top-(top+margin);
-      if(delta){
-        const screen=document.getElementById('workoutScreen');
-        const scroller=document.getElementById('exerciseContainer');
-        if(scroller && scroller.contains(el)) scroller.scrollTop+=delta;
-        else if(screen) screen.scrollTop+=delta;
-      }
-    });
+  const vv=window.visualViewport;
+  const root=document.documentElement;
+  const SEL='#workoutScreen #setsList .workout-set-row input';
+  let activeInput=null, kb=0, timer=0;
+  const isWorkoutInput=el=>!!(el && el.matches && el.matches(SEL));
+
+  function measureKeyboard(){
+    if(!vv) return 0;
+    const h=Math.round(window.innerHeight-vv.height-vv.offsetTop);
+    return h>80 ? h : 0;               // <80px = browser chrome, not a keyboard
   }
+  function applyKeyboard(){
+    const next=measureKeyboard();
+    if(next!==kb){ kb=next; root.style.setProperty('--ft-kb',kb+'px'); root.classList.toggle('ft-kb-open',kb>0); }
+  }
+  function reveal(){
+    const el=activeInput;
+    if(!el || !el.isConnected || document.activeElement!==el) return;
+    const scroller=document.getElementById('exerciseContainer');
+    if(!scroller || !scroller.contains(el)) return;
+    const top=vv ? vv.offsetTop : 0;
+    const bottom=top+(vv ? vv.height : window.innerHeight);
+    const sr=scroller.getBoundingClientRect();
+    const areaTop=Math.max(top,sr.top), areaBottom=Math.min(bottom,sr.bottom);
+    const row=el.closest('.workout-set-row')||el;
+    const r=row.getBoundingClientRect();
+    // Centre the row in the visible strip so the value being typed is clearly seen.
+    const delta=(r.top+r.height/2)-(areaTop+areaBottom)/2;
+    if(Math.abs(delta)>4) scroller.scrollTop+=delta;
+  }
+  function schedule(){
+    clearTimeout(timer);
+    applyKeyboard();
+    requestAnimationFrame(reveal);
+    // iOS reports the final keyboard geometry after its animation (~300 ms).
+    timer=setTimeout(()=>{ applyKeyboard(); requestAnimationFrame(reveal); },120);
+    setTimeout(()=>{ applyKeyboard(); requestAnimationFrame(reveal); },380);
+  }
+
   document.addEventListener('focusin',e=>{
     if(!isWorkoutInput(e.target)) return;
-    activeWorkoutInput=e.target;
-    // Give iOS one frame to settle its focus/keyboard geometry before scrolling.
-    requestAnimationFrame(()=>keepFocusedInputVisible(e.target));
+    activeInput=e.target; schedule();
   },true);
   document.addEventListener('focusout',e=>{
-    if(e.target===activeWorkoutInput) activeWorkoutInput=null;
+    if(e.target!==activeInput) return;
+    activeInput=null;
+    // Wait: focus may just be moving to the next field (keyboard stays up).
+    setTimeout(()=>{ if(!activeInput) applyKeyboard(); },250);
   },true);
-  document.addEventListener('touchend',e=>{
-    const el=e.target?.closest?.('#workoutScreen #setsList .workout-set-row input');
-    if(!el) return;
-    // Never redirect focus to a sibling: use the exact field under the touch.
-    if(document.activeElement!==el) el.focus({preventScroll:true});
-    activeWorkoutInput=el;
-    requestAnimationFrame(()=>keepFocusedInputVisible(el));
-  },{capture:true,passive:true});
-  if(window.visualViewport){
-    window.visualViewport.addEventListener('resize',()=>{
-      if(activeWorkoutInput) keepFocusedInputVisible(activeWorkoutInput);
-    },{passive:true});
-    window.visualViewport.addEventListener('scroll',()=>{
-      if(activeWorkoutInput) keepFocusedInputVisible(activeWorkoutInput);
-    },{passive:true});
+  if(vv){
+    const onVV=()=>{ applyKeyboard(); if(activeInput) requestAnimationFrame(reveal); };
+    vv.addEventListener('resize',onVV,{passive:true});
+    vv.addEventListener('scroll',onVV,{passive:true});
   }
-  // Save each edit immediately, rather than waiting for blur/change when iOS
-  // moves focus as the keyboard is dismissed or the user taps another field.
+  // Tapping outside inputs dismisses the keyboard (no "Done" key on decimal/numeric pads).
+  document.addEventListener('touchstart',e=>{
+    if(!activeInput) return;
+    const t=e.target;
+    if(t && t.closest && (t.closest('input,textarea,select,[contenteditable]'))) return;
+    if(t && t.closest && t.closest('button,a,[onclick],.workout-set-row')) return;
+    activeInput.blur();
+  },{capture:true,passive:true});
+
+  // Save every keystroke straight away (iOS may move focus before 'change' fires).
+  // live=true: draft is saved but the personal-record check waits for 'change'.
   document.addEventListener('input',e=>{
     const el=e.target;
     if(!isWorkoutInput(el)) return;
-    const match=String(el.getAttribute('onchange')||'').match(/updateSet\((\-?\d+),(\d+),'([^']+)'/);
-    if(match && typeof window.updateSet==='function') window.updateSet(Number(match[1]),Number(match[2]),match[3],el.value);
+    const m=String(el.getAttribute('onchange')||'').match(/updateSet\((\-?\d+),(\d+),'([^']+)'/);
+    if(m && typeof window.updateSet==='function') window.updateSet(Number(m[1]),Number(m[2]),m[3],el.value,true);
   },true);
 })();
