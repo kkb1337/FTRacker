@@ -1,4 +1,4 @@
-/* FTracker v1.8.93 — stable per-field workout input binding.
+/* FTracker v1.8.95 — stable per-field workout input binding.
    Consolidated from the audited inline runtimes without changing their order. */
 
 /* ===== CONSOLIDATED RUNTIME BLOCK 1 ===== */
@@ -4138,14 +4138,28 @@ function bindWorkoutSetInputs(root){
         const field=String(input.dataset.setField||'');
         if(!Number.isInteger(exIdx) || !Number.isInteger(setIdx) || !['weight','reps','time','intensity'].includes(field)) return;
         workoutInputBindings.add(input);
-        input.addEventListener('input',()=>updateSet(exIdx,setIdx,field,input.value,true));
-        input.addEventListener('change',()=>updateSet(exIdx,setIdx,field,input.value,false));
+        // Update only the captured field. No list render and no programmatic focus changes.
+        input.addEventListener('input',event=>{
+            if(event.currentTarget!==input || !input.isConnected) return;
+            updateSet(exIdx,setIdx,field,input.value,true);
+        });
+        input.addEventListener('change',event=>{
+            if(event.currentTarget!==input || !input.isConnected) return;
+            updateSet(exIdx,setIdx,field,input.value,false);
+        });
+        input.addEventListener('keydown',event=>{
+            if(event.key!=='Enter') return;
+            event.preventDefault();
+            const all=Array.from(document.querySelectorAll('#workoutScreen #setsList input[data-workout-input="1"]'));
+            const next=all[all.indexOf(input)+1];
+            if(next){ try{next.focus({preventScroll:true});}catch(_){next.focus();} }
+        });
     });
 }
 
 function buildWorkoutSetRowHtml(realIdx,type,s,i){
     let inputFields='';
-    const input=(field,mode,placeholder,value,extra='')=>`<input ${extra} type="text" inputmode="${mode}" data-workout-input="1" data-ex-index="${realIdx}" data-set-index="${i}" data-set-field="${field}" placeholder="${placeholder}" value="${escapeHtml(value||'')}">`;
+    const input=(field,mode,placeholder,value,extra='')=>`<input ${extra} id="workout-input-${String(realIdx).replace(/[^a-zA-Z0-9_-]/g,'_')}-${i}-${field}" type="text" inputmode="${mode}" autocomplete="off" autocorrect="off" spellcheck="false" data-workout-input="1" data-ex-index="${realIdx}" data-set-index="${i}" data-set-field="${field}" placeholder="${placeholder}" value="${escapeHtml(value||'')}">`;
     if(type==='strength') inputFields=`<div class="workout-set-inputs horizontal">${input('weight','decimal','Вес, кг',s.weight)}${input('reps','numeric','Повторы',s.reps)}</div>`;
     else if(type==='cardio') inputFields=`<div class="workout-set-inputs horizontal">${input('time','decimal','Минуты',s.time)}${input('intensity','decimal','Инт. 1–10',s.intensity)}</div>`;
     else inputFields=`<div class="workout-set-inputs horizontal single">${input('reps','numeric','Повторы',s.reps,'class="workout-bodyweight-input"')}</div>`;
@@ -6612,7 +6626,7 @@ function showToast(msg) {
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1.8.93', {updateViaCache:'none'}).catch(() => {});
+        navigator.serviceWorker.register('./sw.js?v=1.8.95', {updateViaCache:'none'}).catch(() => {});
     });
 }
 
@@ -11559,7 +11573,7 @@ async function clearTemporaryFiles(){
     if(typeof showToast==='function') showToast('Все данные приложения очищены. Перезапуск…');
     setTimeout(()=>{
       // Force the current clean app shell to initialise data from defaults.
-      location.replace(location.pathname+'?v=1.8.93&reset='+Date.now());
+      location.replace(location.pathname+'?v=1.8.95&reset='+Date.now());
     },250);
   }catch(err){
     console.error('Full application reset failed',err);
@@ -11650,7 +11664,7 @@ async function clearTemporaryFiles(){
 })();
 
 
-/* FTracker v1.8.93 — iOS PWA keyboard handling for workout inputs.
+/* FTracker v1.8.95 — iOS PWA keyboard handling for workout inputs.
    In an iOS standalone PWA the layout viewport does NOT shrink when the software
    keyboard opens; only window.visualViewport does. The workout scroller is pinned
    to the full-height layout viewport, so its bottom (and the fields) sat under the
@@ -11724,3 +11738,6 @@ async function clearTemporaryFiles(){
 
   // Workout data updates are bound directly to each input when its row is rendered.
 })();
+
+
+/* Focus styling is CSS :focus only; no mirrored JS active-cell state. */

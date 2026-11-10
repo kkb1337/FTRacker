@@ -1,4 +1,4 @@
-/* FTracker v1.8.93 logic regression tests; run with: node audit-tests.js */
+/* FTracker v1.8.95 logic regression tests; run with: node audit-tests.js */
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const app=fs.readFileSync('app.js','utf8');
@@ -53,9 +53,9 @@ assert.doesNotMatch(app,/insertAdjacentHTML\('beforeend', `.*program-picker-add-
 assert.match(index,/exercisePickerSearch/);
 
 // Release metadata must be synchronized.
-for(const s of [app,index,manifest,sw,readme]) assert.ok(s.includes('1.8.93'),'stale release version');
-assert.ok(sw.includes("const APP_VERSION = '1.8.93'"),'SW cache version missing');
-assert.match(index,/ui_refactor\.css\?v=1\.8\.93/,'unified UI stylesheet is not linked');
+for(const s of [app,index,manifest,sw,readme]) assert.ok(s.includes('1.8.95'),'stale release version');
+assert.ok(sw.includes("const APP_VERSION = '1.8.95'"),'SW cache version missing');
+assert.match(index,/ui_refactor\.css\?v=1\.8\.95/,'unified UI stylesheet is not linked');
 assert.match(sw,/ui_refactor\.css/,'unified UI stylesheet is not cached by the SW');
 assert.match(uiCss,/body:not\(\.light-mode\)/,'dark theme token layer missing');
 assert.match(uiCss,/body\.light-mode|:root/,'light theme token layer missing');
@@ -83,7 +83,7 @@ assert.match(app,/delete data\.exerciseNotes\[key\]/,'exercise note clear path m
 assert.match(app,/data\.exerciseNotes && Object\.prototype\.hasOwnProperty\.call\(data\.exerciseNotes,key\)/,'exercise note read path missing');
 assert.match(css,/#workoutScreen \.workout-completion-head\{[^}]*justify-content:center!important/,'workout completion should be centered');
 assert.match(css,/#workoutScreen \.workout-action-grid\{[^}]*grid-template-columns:1fr 1fr!important/,'workout action buttons should have equal width');
-console.log('FTracker v1.8.93 logic regression tests: OK');
+console.log('FTracker v1.8.95 logic regression tests: OK');
 
 // v1.8.57: replacement creation must replace the frozen slot, not append.
 assert(fs.readFileSync('app.js','utf8').includes("workoutNewExerciseContext={mode:'replace',slot,programIndex:Number(currentProgram),oldRef:slots[slot]}"), 'replace creation context must freeze slot before closing replace modal');
@@ -132,15 +132,15 @@ assert.match(app,/data-ex-index="\$\{realIdx\}"/,'exercise index must be bound o
 assert.match(app,/data-set-index="\$\{i\}"/,'set index must be bound on each input');
 assert.match(app,/data-set-field="\$\{field\}"/,'field name must be bound on each input');
 assert.match(app,/function bindWorkoutSetInputs\(root\)/,'direct per-input workout binding missing');
-assert.match(app,/input\.addEventListener\('input',\(\)=>updateSet\(exIdx,setIdx,field,input\.value,true\)\)/,'input event must update its captured set and field');
-assert.match(app,/input\.addEventListener\('change',\(\)=>updateSet\(exIdx,setIdx,field,input\.value,false\)\)/,'change event must commit its captured set and field');
+assert.match(app,/input\.addEventListener\('input',event=>/,'input event must update its captured set and field');
+assert.match(app,/input\.addEventListener\('change',event=>/,'change event must commit its captured set and field');
 assert.match(app,/bindWorkoutSetInputs\(container\)/,'initially rendered rows must be bound');
 assert.match(app,/bindWorkoutSetInputs\(list\.lastElementChild\)/,'newly added row must be bound');
 assert.doesNotMatch(app,/document\.addEventListener\('input',e=>commitWorkoutInput/,'no competing document-level workout input handler');
 assert.doesNotMatch(app,/getAttribute\('onchange'\).*updateSet/,'workout target must not be inferred from inline onchange');
 assert.match(css,/#workoutScreen #setsList \.workout-set-row input\[data-workout-input="1"\]/,'iOS workout hitbox rules missing');
 
-console.log('FTracker v1.8.93 Index-weight regression checks: OK');
+console.log('FTracker v1.8.95 Index-weight regression checks: OK');
 
 // v1.8.93: every stylesheet/script linked from index.html must exist and be cached by the SW.
 const fsx=require('fs');
@@ -151,4 +151,18 @@ assert.ok(/ui_refactor\\\.css/.test(sw),'SW fetch handler must serve ui_refactor
 // v1.8.93: personal-record check must not run on every keystroke.
 assert.ok(app.includes('prPendingSets'),'live-input PR deferral missing');
 assert.ok(app.includes('--ft-kb'),'keyboard inset handling missing');
-console.log('FTracker v1.8.93 packaging + keyboard checks: OK');
+console.log('FTracker v1.8.95 packaging + keyboard checks: OK');
+
+// v1.8.95: focus indicator is native :focus; no delayed JS mirror or stale active class.
+assert.doesNotMatch(app,/ft-workout-input-active/,'JS mirrored focus state must be removed');
+assert.match(uiCss,/input\[data-workout-input=\"1\"\]:focus/,'focused workout input styling missing');
+assert.match(app,/id=\"workout-input-.*data-workout-input=\"1\"/,'each input needs a stable unique identity');
+assert.match(app,/event\.key!=='Enter'/,'explicit Enter navigation must be supported');
+
+// v1.8.95: typing must not rebuild the set list or use a delayed JS focus mirror.
+const updateSetBody=(app.match(/function updateSet\([\s\S]*?\n\}/)||[])[0]||'';
+assert.ok(updateSetBody,'updateSet function missing');
+assert.doesNotMatch(updateSetBody,/renderExercise\(|innerHTML|replaceChildren\(/,'typing must not rebuild workout DOM');
+assert.match(app,/id="workout-input-\$\{String\(realIdx\)/,'workout input DOM identity must be stable and unique');
+assert.match(app,/bindWorkoutSetInputs\(list\.lastElementChild\)/,'new rows must receive their own input handlers');
+assert.doesNotMatch(app,/ft-workout-input-active/,'stale JS focus mirror must not exist');

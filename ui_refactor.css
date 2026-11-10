@@ -1038,3 +1038,15 @@ html body #workoutScreen .workout-top-right:is(#ftb1,*):is(#ftb2,*):is(#ftb3,*) 
 @media (max-width: 340px) {
   html body #app > #fscoreAnalyticsScreen > .screen-header > .fscore-title:is(#ftb1,*):is(#ftb2,*):is(#ftb3,*) { grid-column: 2 / 4 !important; }
 }
+
+
+
+
+/* FTracker v1.8.95 — the green outline follows the real focused input. */
+html body #workoutScreen #setsList input[data-workout-input="1"] {
+  outline: none !important; -webkit-tap-highlight-color: transparent !important; box-shadow: none !important;
+}
+html body #workoutScreen #setsList input[data-workout-input="1"]:focus,
+html body #workoutScreen #setsList input[data-workout-input="1"]:focus-visible {
+  border: 1px solid #2bd45c !important; box-shadow: 0 0 0 2px rgba(43,212,92,.24) !important; outline: none !important;
+}
