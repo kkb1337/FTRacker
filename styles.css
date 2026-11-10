@@ -4737,7 +4737,7 @@ body.light-mode #workoutScreen .workout-set-row input {
 }
 
 
-/* v1.8.87: precise workout set hit targets on iOS/PWA. The row DOM has three direct children: number, inputs wrapper, delete button. */
+/* v1.8.93: precise workout set hit targets on iOS/PWA. The row DOM has three direct children: number, inputs wrapper, delete button. */
 #workoutScreen .set-row.workout-set-row {
   display: grid !important;
   grid-template-columns: 28px minmax(0, 1fr) 36px !important;
@@ -4777,7 +4777,7 @@ body.light-mode #workoutScreen .workout-set-row input {
 }
 
 
-/* v1.8.92 — deterministic workout input hit targets on iOS */
+/* v1.8.93 — deterministic workout input hit targets on iOS */
 #workoutScreen #setsList .workout-set-row{
   display:grid!important;
   grid-template-columns:32px minmax(0,1fr) 38px!important;

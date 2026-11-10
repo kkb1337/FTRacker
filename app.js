@@ -1,4 +1,4 @@
-/* FTracker v1.8.92 — iOS workout input focus and hit-target fix.
+/* FTracker v1.8.93 — stable per-field workout input binding.
    Consolidated from the audited inline runtimes without changing their order. */
 
 /* ===== CONSOLIDATED RUNTIME BLOCK 1 ===== */
@@ -4122,6 +4122,27 @@ function resetWorkoutRecommendationAutoCollapse(){
     },10000);
 }
 
+// Each workout field owns its update target. Bind directly to the input element
+// and capture the exercise/set/field tuple once; never resolve it later through
+// a bubbling document handler or a possibly stale focused element.
+const workoutInputBindings = new WeakSet();
+function bindWorkoutSetInputs(root){
+    if(!root) return;
+    const inputs = root.matches?.('input[data-workout-input="1"]')
+        ? [root]
+        : Array.from(root.querySelectorAll?.('input[data-workout-input="1"]') || []);
+    inputs.forEach(input=>{
+        if(workoutInputBindings.has(input)) return;
+        const exIdx=Number(input.dataset.exIndex);
+        const setIdx=Number(input.dataset.setIndex);
+        const field=String(input.dataset.setField||'');
+        if(!Number.isInteger(exIdx) || !Number.isInteger(setIdx) || !['weight','reps','time','intensity'].includes(field)) return;
+        workoutInputBindings.add(input);
+        input.addEventListener('input',()=>updateSet(exIdx,setIdx,field,input.value,true));
+        input.addEventListener('change',()=>updateSet(exIdx,setIdx,field,input.value,false));
+    });
+}
+
 function buildWorkoutSetRowHtml(realIdx,type,s,i){
     let inputFields='';
     const input=(field,mode,placeholder,value,extra='')=>`<input ${extra} type="text" inputmode="${mode}" data-workout-input="1" data-ex-index="${realIdx}" data-set-index="${i}" data-set-field="${field}" placeholder="${placeholder}" value="${escapeHtml(value||'')}">`;
@@ -4277,6 +4298,7 @@ function renderExerciseBase() {
       </div>
     </article>`;
 
+    bindWorkoutSetInputs(container);
     const noteBtn=container.querySelector('.workout-note-btn');
     if(noteBtn) noteBtn.addEventListener('click',()=>openWorkoutExerciseNote(noteBtn.dataset.workoutNoteName||exerciseName,noteBtn.dataset.workoutNoteType||type));
     if(typeof window.__ftSyncWorkoutViewport==='function') requestAnimationFrame(window.__ftSyncWorkoutViewport);
@@ -4370,6 +4392,7 @@ function addSet() {
     const list=document.getElementById('setsList');
     if(list){
         list.insertAdjacentHTML('beforeend',buildWorkoutSetRowHtml(realIdx,type,newSet,setIndex));
+        bindWorkoutSetInputs(list.lastElementChild);
         updateWorkoutCompletionUI();
         requestAnimationFrame(()=>{
             const row=list.lastElementChild;
@@ -4402,6 +4425,8 @@ function updateSet(exIdx, setIdx, field, value, live) {
     updateWorkoutCompletionUI();
     updateWorkoutProgressUI();
 }
+
+window.updateSet=updateSet;
 
 function checkPersonalRecord(exIdx, setIdx) {
     // Используем getWorkoutExercise: exIdx может быть отрицательным (заменённое
@@ -6587,7 +6612,7 @@ function showToast(msg) {
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1.8.92', {updateViaCache:'none'}).catch(() => {});
+        navigator.serviceWorker.register('./sw.js?v=1.8.93', {updateViaCache:'none'}).catch(() => {});
     });
 }
 
@@ -11534,7 +11559,7 @@ async function clearTemporaryFiles(){
     if(typeof showToast==='function') showToast('Все данные приложения очищены. Перезапуск…');
     setTimeout(()=>{
       // Force the current clean app shell to initialise data from defaults.
-      location.replace(location.pathname+'?v=1.8.92&reset='+Date.now());
+      location.replace(location.pathname+'?v=1.8.93&reset='+Date.now());
     },250);
   }catch(err){
     console.error('Full application reset failed',err);
@@ -11625,7 +11650,7 @@ async function clearTemporaryFiles(){
 })();
 
 
-/* FTracker v1.8.92 — iOS PWA keyboard handling for workout inputs.
+/* FTracker v1.8.93 — iOS PWA keyboard handling for workout inputs.
    In an iOS standalone PWA the layout viewport does NOT shrink when the software
    keyboard opens; only window.visualViewport does. The workout scroller is pinned
    to the full-height layout viewport, so its bottom (and the fields) sat under the
@@ -11697,18 +11722,5 @@ async function clearTemporaryFiles(){
     activeInput.blur();
   },{capture:true,passive:true});
 
-  // Each workout field carries its own immutable row/field binding in data-*.
-  // Never infer the target set by parsing inline HTML: iOS Safari can keep a
-  // stale focused element while the visual viewport and scroll position change.
-  function commitWorkoutInput(el, live){
-    if(!el || !el.matches || !el.matches(SEL)) return;
-    const exIdx=Number(el.dataset.exIndex);
-    const setIdx=Number(el.dataset.setIndex);
-    const field=el.dataset.setField;
-    if(!Number.isInteger(exIdx) || !Number.isInteger(setIdx)) return;
-    if(!['weight','reps','time','intensity'].includes(field)) return;
-    if(typeof window.updateSet==='function') window.updateSet(exIdx,setIdx,field,el.value,live);
-  }
-  document.addEventListener('input',e=>commitWorkoutInput(e.target,true),true);
-  document.addEventListener('change',e=>commitWorkoutInput(e.target,false),true);
+  // Workout data updates are bound directly to each input when its row is rendered.
 })();

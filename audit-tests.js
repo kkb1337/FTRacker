@@ -1,4 +1,4 @@
-/* FTracker v1.8.92 logic regression tests; run with: node audit-tests.js */
+/* FTracker v1.8.93 logic regression tests; run with: node audit-tests.js */
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const app=fs.readFileSync('app.js','utf8');
@@ -53,9 +53,9 @@ assert.doesNotMatch(app,/insertAdjacentHTML\('beforeend', `.*program-picker-add-
 assert.match(index,/exercisePickerSearch/);
 
 // Release metadata must be synchronized.
-for(const s of [app,index,manifest,sw,readme]) assert.ok(s.includes('1.8.92'),'stale release version');
-assert.ok(sw.includes("const APP_VERSION = '1.8.92'"),'SW cache version missing');
-assert.match(index,/ui_refactor\.css\?v=1\.8\.91/,'unified UI stylesheet is not linked');
+for(const s of [app,index,manifest,sw,readme]) assert.ok(s.includes('1.8.93'),'stale release version');
+assert.ok(sw.includes("const APP_VERSION = '1.8.93'"),'SW cache version missing');
+assert.match(index,/ui_refactor\.css\?v=1\.8\.93/,'unified UI stylesheet is not linked');
 assert.match(sw,/ui_refactor\.css/,'unified UI stylesheet is not cached by the SW');
 assert.match(uiCss,/body:not\(\.light-mode\)/,'dark theme token layer missing');
 assert.match(uiCss,/body\.light-mode|:root/,'light theme token layer missing');
@@ -76,14 +76,14 @@ assert.ok(app.includes('createdAt'), 'custom goal creation baseline missing');
 assert.ok(app.includes('Math.max(now-days*86400000,Number(startAt)||0)'), 'goal startAt baseline missing');
 assert.ok(app.includes('const total=baseTotal;'),'extra completed sets must not expand workout progress');
 
-// v1.8.92: exercise notes use a durable exercise-keyed store and remain mirrored in the directory.
+// v1.8.93: exercise notes use a durable exercise-keyed store and remain mirrored in the directory.
 assert.match(app,/exerciseNotes:\s*\{\}/,'durable exercise notes store missing');
 assert.match(app,/data\.exerciseNotes\[key\]=note/,'exercise note write path missing');
 assert.match(app,/delete data\.exerciseNotes\[key\]/,'exercise note clear path missing');
 assert.match(app,/data\.exerciseNotes && Object\.prototype\.hasOwnProperty\.call\(data\.exerciseNotes,key\)/,'exercise note read path missing');
 assert.match(css,/#workoutScreen \.workout-completion-head\{[^}]*justify-content:center!important/,'workout completion should be centered');
 assert.match(css,/#workoutScreen \.workout-action-grid\{[^}]*grid-template-columns:1fr 1fr!important/,'workout action buttons should have equal width');
-console.log('FTracker v1.8.92 logic regression tests: OK');
+console.log('FTracker v1.8.93 logic regression tests: OK');
 
 // v1.8.57: replacement creation must replace the frozen slot, not append.
 assert(fs.readFileSync('app.js','utf8').includes("workoutNewExerciseContext={mode:'replace',slot,programIndex:Number(currentProgram),oldRef:slots[slot]}"), 'replace creation context must freeze slot before closing replace modal');
@@ -126,25 +126,29 @@ assert.deepEqual(rebalanceEdited({body:40,training:30,nutrition:30},{body:true,t
 assert.deepEqual(rebalanceEdited({body:70,training:15,nutrition:15},{body:true,training:true,nutrition:false},'body',70),{body:70,training:30,nutrition:15});
 assert.deepEqual(rebalanceEdited({body:50,training:30,nutrition:20},{body:true,training:true,nutrition:true},'training',60),{body:29,training:60,nutrition:11});
 
-// v1.8.92: workout fields use explicit data bindings, never parse inline onchange.
+// v1.8.93: workout fields use explicit data bindings, never parse inline onchange.
 assert.match(app,/data-workout-input="1"/,'workout inputs need explicit identity markers');
 assert.match(app,/data-ex-index="\$\{realIdx\}"/,'exercise index must be bound on each input');
 assert.match(app,/data-set-index="\$\{i\}"/,'set index must be bound on each input');
 assert.match(app,/data-set-field="\$\{field\}"/,'field name must be bound on each input');
-assert.match(app,/function commitWorkoutInput\(el, live\)/,'deterministic workout input dispatcher missing');
-assert.match(app,/document\.addEventListener\('change',e=>commitWorkoutInput\(e\.target,false\),true\)/,'final input commit handler missing');
+assert.match(app,/function bindWorkoutSetInputs\(root\)/,'direct per-input workout binding missing');
+assert.match(app,/input\.addEventListener\('input',\(\)=>updateSet\(exIdx,setIdx,field,input\.value,true\)\)/,'input event must update its captured set and field');
+assert.match(app,/input\.addEventListener\('change',\(\)=>updateSet\(exIdx,setIdx,field,input\.value,false\)\)/,'change event must commit its captured set and field');
+assert.match(app,/bindWorkoutSetInputs\(container\)/,'initially rendered rows must be bound');
+assert.match(app,/bindWorkoutSetInputs\(list\.lastElementChild\)/,'newly added row must be bound');
+assert.doesNotMatch(app,/document\.addEventListener\('input',e=>commitWorkoutInput/,'no competing document-level workout input handler');
 assert.doesNotMatch(app,/getAttribute\('onchange'\).*updateSet/,'workout target must not be inferred from inline onchange');
 assert.match(css,/#workoutScreen #setsList \.workout-set-row input\[data-workout-input="1"\]/,'iOS workout hitbox rules missing');
 
-console.log('FTracker v1.8.92 Index-weight regression checks: OK');
+console.log('FTracker v1.8.93 Index-weight regression checks: OK');
 
-// v1.8.92: every stylesheet/script linked from index.html must exist and be cached by the SW.
+// v1.8.93: every stylesheet/script linked from index.html must exist and be cached by the SW.
 const fsx=require('fs');
 for(const m of index.matchAll(/(?:href|src)="\.\/([^"?]+)(?:\?[^"]*)?"/g)){
   assert.ok(fsx.existsSync(m[1]),'index.html links a missing file: '+m[1]);
 }
 assert.ok(/ui_refactor\\\.css/.test(sw),'SW fetch handler must serve ui_refactor.css from the shell cache');
-// v1.8.92: personal-record check must not run on every keystroke.
+// v1.8.93: personal-record check must not run on every keystroke.
 assert.ok(app.includes('prPendingSets'),'live-input PR deferral missing');
 assert.ok(app.includes('--ft-kb'),'keyboard inset handling missing');
-console.log('FTracker v1.8.92 packaging + keyboard checks: OK');
+console.log('FTracker v1.8.93 packaging + keyboard checks: OK');
