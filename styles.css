@@ -4777,7 +4777,7 @@ body.light-mode #workoutScreen .workout-set-row input {
 }
 
 
-/* v1.8.91 — deterministic workout input hit targets on iOS */
+/* v1.8.92 — deterministic workout input hit targets on iOS */
 #workoutScreen #setsList .workout-set-row{
   display:grid!important;
   grid-template-columns:32px minmax(0,1fr) 38px!important;
