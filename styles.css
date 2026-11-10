@@ -4775,3 +4775,45 @@ body.light-mode #workoutScreen .workout-set-row input {
   position: relative !important;
   z-index: 1 !important;
 }
+
+
+/* v1.8.91 — deterministic workout input hit targets on iOS */
+#workoutScreen #setsList .workout-set-row{
+  display:grid!important;
+  grid-template-columns:32px minmax(0,1fr) 38px!important;
+  align-items:center!important;
+  position:relative!important;
+  isolation:isolate!important;
+  transform:none!important;
+}
+#workoutScreen #setsList .workout-set-row .workout-set-inputs{
+  grid-column:2!important;
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:7px!important;
+  min-width:0!important;
+  width:100%!important;
+  position:relative!important;
+}
+#workoutScreen #setsList .workout-set-row input[data-workout-input="1"]{
+  position:relative!important;
+  z-index:2!important;
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  height:44px!important;
+  min-height:44px!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+  pointer-events:auto!important;
+  touch-action:manipulation!important;
+  -webkit-appearance:none!important;
+  -webkit-user-select:text!important;
+  user-select:text!important;
+  transform:none!important;
+}
+#workoutScreen #setsList .workout-set-row .set-delete-btn{
+  grid-column:3!important;
+  position:relative!important;
+  z-index:2!important;
+}

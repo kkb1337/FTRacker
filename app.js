@@ -1,4 +1,4 @@
-/* FTracker v1.8.90 — iOS workout input focus and hit-target fix.
+/* FTracker v1.8.91 — iOS workout input focus and hit-target fix.
    Consolidated from the audited inline runtimes without changing their order. */
 
 /* ===== CONSOLIDATED RUNTIME BLOCK 1 ===== */
@@ -4124,9 +4124,10 @@ function resetWorkoutRecommendationAutoCollapse(){
 
 function buildWorkoutSetRowHtml(realIdx,type,s,i){
     let inputFields='';
-    if(type==='strength') inputFields=`<div class="workout-set-inputs horizontal"><input type="text" inputmode="decimal" placeholder="Вес, кг" value="${escapeHtml(s.weight||'')}" onchange="updateSet(${realIdx},${i},'weight',this.value)"><input type="text" inputmode="numeric" placeholder="Повторы" value="${escapeHtml(s.reps||'')}" onchange="updateSet(${realIdx},${i},'reps',this.value)"></div>`;
-    else if(type==='cardio') inputFields=`<div class="workout-set-inputs horizontal"><input type="text" inputmode="decimal" placeholder="Минуты" value="${escapeHtml(s.time||'')}" onchange="updateSet(${realIdx},${i},'time',this.value)"><input type="text" inputmode="decimal" placeholder="Инт. 1–10" value="${escapeHtml(s.intensity||'')}" onchange="updateSet(${realIdx},${i},'intensity',this.value)"></div>`;
-    else inputFields=`<div class="workout-set-inputs horizontal single"><input class="workout-bodyweight-input" type="text" inputmode="numeric" placeholder="Повторы" value="${escapeHtml(s.reps||'')}" onchange="updateSet(${realIdx},${i},'reps',this.value)"></div>`;
+    const input=(field,mode,placeholder,value,extra='')=>`<input ${extra} type="text" inputmode="${mode}" data-workout-input="1" data-ex-index="${realIdx}" data-set-index="${i}" data-set-field="${field}" placeholder="${placeholder}" value="${escapeHtml(value||'')}">`;
+    if(type==='strength') inputFields=`<div class="workout-set-inputs horizontal">${input('weight','decimal','Вес, кг',s.weight)}${input('reps','numeric','Повторы',s.reps)}</div>`;
+    else if(type==='cardio') inputFields=`<div class="workout-set-inputs horizontal">${input('time','decimal','Минуты',s.time)}${input('intensity','decimal','Инт. 1–10',s.intensity)}</div>`;
+    else inputFields=`<div class="workout-set-inputs horizontal single">${input('reps','numeric','Повторы',s.reps,'class="workout-bodyweight-input"')}</div>`;
     return `<div class="set-row workout-set-row"><span class="set-num">${i+1}</span>${inputFields}<button type="button" class="set-delete-btn" onclick="deleteSet(${realIdx},${i})" title="Удалить подход" aria-label="Удалить подход">🗑️</button></div>`;
 }
 
@@ -6586,7 +6587,7 @@ function showToast(msg) {
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1.8.90', {updateViaCache:'none'}).catch(() => {});
+        navigator.serviceWorker.register('./sw.js?v=1.8.91', {updateViaCache:'none'}).catch(() => {});
     });
 }
 
@@ -11533,7 +11534,7 @@ async function clearTemporaryFiles(){
     if(typeof showToast==='function') showToast('Все данные приложения очищены. Перезапуск…');
     setTimeout(()=>{
       // Force the current clean app shell to initialise data from defaults.
-      location.replace(location.pathname+'?v=1.8.90&reset='+Date.now());
+      location.replace(location.pathname+'?v=1.8.91&reset='+Date.now());
     },250);
   }catch(err){
     console.error('Full application reset failed',err);
@@ -11624,7 +11625,7 @@ async function clearTemporaryFiles(){
 })();
 
 
-/* FTracker v1.8.90 — iOS PWA keyboard handling for workout inputs.
+/* FTracker v1.8.91 — iOS PWA keyboard handling for workout inputs.
    In an iOS standalone PWA the layout viewport does NOT shrink when the software
    keyboard opens; only window.visualViewport does. The workout scroller is pinned
    to the full-height layout viewport, so its bottom (and the fields) sat under the
@@ -11696,12 +11697,18 @@ async function clearTemporaryFiles(){
     activeInput.blur();
   },{capture:true,passive:true});
 
-  // Save every keystroke straight away (iOS may move focus before 'change' fires).
-  // live=true: draft is saved but the personal-record check waits for 'change'.
-  document.addEventListener('input',e=>{
-    const el=e.target;
-    if(!isWorkoutInput(el)) return;
-    const m=String(el.getAttribute('onchange')||'').match(/updateSet\((\-?\d+),(\d+),'([^']+)'/);
-    if(m && typeof window.updateSet==='function') window.updateSet(Number(m[1]),Number(m[2]),m[3],el.value,true);
-  },true);
+  // Each workout field carries its own immutable row/field binding in data-*.
+  // Never infer the target set by parsing inline HTML: iOS Safari can keep a
+  // stale focused element while the visual viewport and scroll position change.
+  function commitWorkoutInput(el, live){
+    if(!el || !el.matches || !el.matches(SEL)) return;
+    const exIdx=Number(el.dataset.exIndex);
+    const setIdx=Number(el.dataset.setIndex);
+    const field=el.dataset.setField;
+    if(!Number.isInteger(exIdx) || !Number.isInteger(setIdx)) return;
+    if(!['weight','reps','time','intensity'].includes(field)) return;
+    if(typeof window.updateSet==='function') window.updateSet(exIdx,setIdx,field,el.value,live);
+  }
+  document.addEventListener('input',e=>commitWorkoutInput(e.target,true),true);
+  document.addEventListener('change',e=>commitWorkoutInput(e.target,false),true);
 })();
